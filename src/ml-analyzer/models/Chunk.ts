@@ -247,7 +247,6 @@ export default class Chunk {
 
     for (let i = 0; i < newChunks.length; i++) {
       if (chunkHash.has(newChunks[i].hash())) {
-        console.log("Re-used chunk!")
         const commonChunk = chunkHash.get(newChunks[i].hash())
 
         if (commonChunk) {
