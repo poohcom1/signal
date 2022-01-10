@@ -1,9 +1,11 @@
 import { findLast, isEqual } from "lodash"
 import { observer } from "mobx-react-lite"
-import React, { FC, useCallback, useState } from "react"
+import React, { FC, useCallback, useEffect, useState } from "react"
 import { BeatWithX } from "../../../common/helpers/mapBeats"
 import { LoopSetting } from "../../../common/player"
 import { Theme } from "../../../common/theme/Theme"
+import Chunk from "../../../ml-analyzer/models/Chunk"
+import MLRootStore from "../../../ml-analyzer/stores/MLRootStore"
 import { setPlayerPosition, updateTimeSignature } from "../../actions"
 import { Layout } from "../../Constants"
 import { useContextMenu } from "../../hooks/useContextMenu"
@@ -98,6 +100,31 @@ function drawLoopPoints(
   if (loop.begin !== null && loop.end !== null) {
     ctx.rect(beginX, 0, endX - beginX, height)
     ctx.fillStyle = "rgba(0, 0, 0, 0.02)"
+    ctx.fill()
+  }
+}
+
+// @signal-ml
+function drawChunk(
+  ctx: CanvasRenderingContext2D,
+  chunk: Chunk,
+  height: number,
+  pixelsPerTick: number,
+  theme: Theme
+) {
+  const lineWidth = 1
+  const flagSize = 16
+  ctx.fillStyle = chunk.loaded
+    ? "rgba(0, 255, 0, 0.575)"
+    : "rgba(255, 0, 0, 0.5)"
+  ctx.beginPath()
+
+  const beginX = chunk.startTick * pixelsPerTick
+  const endX = chunk.endTick * pixelsPerTick
+
+  if (chunk.startTick !== null && chunk.endTick !== null) {
+    ctx.rect(beginX, 0, endX - beginX, height)
+    //ctx.fillStyle = "rgba(0, 0, 0, 0.02)"
     ctx.fill()
   }
 }
@@ -222,6 +249,13 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
     [rootStore, scrollLeft, pixelsPerTick, timeSignatures]
   )
 
+  // @signal-ml
+  const selectedTrack = useEffect(() => {}, [
+    rootStore.song.selectedTrack?.events.length,
+    rootStore.song.tracks.length,
+  ])
+  // end
+
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D) => {
       ctx.clearRect(0, 0, width, height)
@@ -232,6 +266,26 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
         drawLoopPoints(ctx, loop, height, pixelsPerTick, theme)
       }
       drawTimeSignatures(ctx, height, timeSignatures, pixelsPerTick, theme)
+
+      // @signal-ml
+      const mlTracksMap = (rootStore as MLRootStore).mlTrackStore
+      const selectedTrack = rootStore.song.selectedTrack
+
+      if (selectedTrack) {
+        const selectedTrackWrapper = mlTracksMap.get(selectedTrack.id)
+
+        if (selectedTrackWrapper) {
+          const chunks = selectedTrackWrapper.chunks
+
+          if (chunks) {
+            for (let i = 0; i < chunks.length; i++) {
+              drawChunk(ctx, chunks[i], height, pixelsPerTick, theme)
+            }
+          }
+        }
+      }
+      // end
+
       ctx.restore()
     },
     [width, pixelsPerTick, scrollLeft, beats, timeSignatures]
@@ -260,6 +314,7 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
         onContextMenu={onContextMenu}
         style={style}
       />
+
       <RulerContextMenu {...menuProps} rulerStore={rulerStore} />
       <TimeSignatureDialog
         open={timeSignatureDialogState != null}

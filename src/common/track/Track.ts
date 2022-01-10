@@ -34,7 +34,7 @@ export default class Track {
   events: TrackEvent[] = []
   channel: number | undefined = undefined
   // @signal-ml
-  id: string
+  id: string = uudiv4()
 
   private lastEventId = 0
 
@@ -42,9 +42,6 @@ export default class Track {
     this.events.find((e) => e.id === id)
 
   constructor() {
-    // @signal-ml
-    this.id = uudiv4()
-
     makeObservable(this, {
       updateEvent: action,
       updateEvents: action,
@@ -333,4 +330,6 @@ createModelSchema(Track, {
   events: list(pojo),
   lastEventId: primitive(),
   channel: primitive(),
+  // @signal-ml
+  id: primitive(),
 })

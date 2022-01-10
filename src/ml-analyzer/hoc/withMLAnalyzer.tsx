@@ -2,9 +2,10 @@ import { autorun, reaction } from "mobx"
 import React from "react"
 import Player from "../../common/player"
 import Song from "../../common/song/Song"
-import { StoreContext } from "../hooks/useMLStores"
+import { StoreContext } from "../../main/hooks/useStores"
 import Chunk from "../models/Chunk"
 import MLTrackWrapper from "../models/MLTrackWrapper"
+import MLRootStore from "../stores/MLRootStore"
 import MLTracksStore from "../stores/MLTracksStore"
 
 export function withMLPlayer(player: Player, mlTrackStore: MLTracksStore) {
@@ -40,7 +41,7 @@ export function withMLPlayer(player: Player, mlTrackStore: MLTracksStore) {
 export function withMLAnalyzer(Component: React.ComponentType) {
   return class extends React.Component {
     static contextType = StoreContext
-    declare context: React.ContextType<typeof StoreContext>
+    declare context: MLRootStore
 
     private trackCount: number = 0
 
@@ -75,7 +76,7 @@ export function withMLAnalyzer(Component: React.ComponentType) {
       const disposer = reaction(
         // Track events
         () => {
-          const { song, mlTrackStore: mlTracksMap } = this.context
+          const { song } = this.context
 
           for (let i = 1; i < song.tracks.length; i++) {
             if (song.tracks[i].id === id) {
@@ -115,7 +116,7 @@ export function withMLAnalyzer(Component: React.ComponentType) {
         for (let i = song.tracks.length - 1; i >= 1; i--) {
           // If new track
           if (!mlTracksMap.has(song.tracks[i].id)) {
-            const disposer = this.addTrackAnalyzer(song.tracks[1].id)
+            const disposer = this.addTrackAnalyzer(song.tracks[i].id)
 
             mlTracksMap.set(song.tracks[i].id, disposer)
 
