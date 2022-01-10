@@ -1,9 +1,16 @@
 import { clone } from "lodash"
-import { makeObservable, observable } from "mobx"
+import { computed, makeObservable, observable } from "mobx"
 import { NoteEvent, TrackEvent } from "../../../src/common/track"
 import { isNoteEvent } from "../../common/track/identify"
 import { eventsToMidi } from "../common/midi/customMidiConversion"
 import { convertMidi } from "../controllers/controller"
+
+export enum FetchState {
+  UnFetched,
+  Fetching,
+  Fetched,
+  Error,
+}
 
 export default class Chunk {
   public notes: NoteEvent[] = []
@@ -16,6 +23,7 @@ export default class Chunk {
   private _playTimeout: NodeJS.Timeout | null = null
   private _fetching: boolean = false
   private _fetchController = new AbortController()
+  private _error: Error | null = null
 
   constructor(notes: NoteEvent[]) {
     if (notes) {
@@ -39,11 +47,24 @@ export default class Chunk {
       startTick: observable,
       endTick: observable,
       audioSrc: observable,
+      state: computed,
     })
   }
 
   get loaded() {
     return this.audioSrc !== ""
+  }
+
+  get state(): FetchState {
+    if (this.audioSrc !== "") {
+      return FetchState.Fetched
+    } else if (this._fetching) {
+      return FetchState.Fetching
+    } else if (this._error) {
+      return FetchState.Error
+    } else {
+      return FetchState.UnFetched
+    }
   }
 
   public get tick() {
@@ -53,10 +74,13 @@ export default class Chunk {
   // Methods
   public convertMidiToAudio(
     timebase: number,
-    onFinish: (error: boolean) => void = () => {}
+    onUpdate: (state: FetchState) => void = () => {}
   ) {
-    if (!this._fetching) {
+    if (!this._fetching && this.audioSrc === "") {
       this._fetching = true
+      this._error = null
+
+      onUpdate(FetchState.Fetching)
 
       const bytes = eventsToMidi(this.notes, timebase)
 
@@ -67,11 +91,13 @@ export default class Chunk {
         .then((blob) => {
           this.audioSrc = URL.createObjectURL(blob)
           this._audio.src = this.audioSrc
-          onFinish(false)
+          onUpdate(FetchState.Fetched)
         })
         .catch((error: Error) => {
           if (error.name === "AbortError") return
-          onFinish(true)
+
+          onUpdate(FetchState.Error)
+          this._error = error
           console.log("Error ", error)
         })
         .finally(() => {
@@ -221,10 +247,11 @@ export default class Chunk {
 
     for (let i = 0; i < newChunks.length; i++) {
       if (chunkHash.has(newChunks[i].hash())) {
-        const newChunk = chunkHash.get(newChunks[i].hash())
+        console.log("Re-used chunk!")
+        const commonChunk = chunkHash.get(newChunks[i].hash())
 
-        if (newChunk) {
-          newChunks[i] = newChunk
+        if (commonChunk) {
+          newChunks[i] = commonChunk
 
           chunkHash.delete(newChunks[i].hash())
         }

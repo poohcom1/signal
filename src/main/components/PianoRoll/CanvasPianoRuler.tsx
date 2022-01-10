@@ -4,7 +4,7 @@ import React, { FC, useCallback, useState } from "react"
 import { BeatWithX } from "../../../common/helpers/mapBeats"
 import { LoopSetting } from "../../../common/player"
 import { Theme } from "../../../common/theme/Theme"
-import Chunk from "../../../ml-analyzer/models/Chunk"
+import Chunk, { FetchState } from "../../../ml-analyzer/models/Chunk"
 import MLRootStore from "../../../ml-analyzer/stores/MLRootStore"
 import { setPlayerPosition, updateTimeSignature } from "../../actions"
 import { Layout } from "../../Constants"
@@ -114,9 +114,13 @@ function drawChunk(
 ) {
   const lineWidth = 1
   const flagSize = 16
-  ctx.fillStyle = chunk.loaded
-    ? "rgba(0, 255, 0, 0.575)"
-    : "rgba(255, 0, 0, 0.5)"
+  ctx.fillStyle = {
+    [FetchState.UnFetched]: "rgba(255, 0, 0, 0)",
+    [FetchState.Fetching]: "rgba(238, 255, 0, 0.575)",
+    [FetchState.Fetched]: "rgba(0, 255, 0, 0.575)",
+    [FetchState.Error]: "rgba(255, 0, 0, 0.5)",
+  }[chunk.state]
+
   ctx.beginPath()
 
   const beginX = chunk.startTick * pixelsPerTick
