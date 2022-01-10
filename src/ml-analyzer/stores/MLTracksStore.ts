@@ -13,10 +13,12 @@ export interface IMLTracksStore {
 
 export default class MLTracksStore implements IMLTracksStore {
   public mlTrackMap: Map<string, MLTrackWrapper> = new Map()
+  public changeFlag: boolean = false // Very hacky way to forward changes, but probably more optimized than just observing the entire mlTrackMap
 
   constructor() {
     makeObservable(this, {
-      mlTrackMap: observable,
+      mlTrackMap: observable.deep,
+      changeFlag: observable,
     })
   }
 
@@ -51,5 +53,9 @@ export default class MLTracksStore implements IMLTracksStore {
     }
 
     return chunks
+  }
+
+  triggerFlag() {
+    this.changeFlag = !this.changeFlag
   }
 }

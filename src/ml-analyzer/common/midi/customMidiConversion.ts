@@ -81,16 +81,11 @@ export function trackToMidi(track: Track, timebase: number) {
 }
 
 export function eventsToMidi(
-  track: Track,
   noteEvents: TrackEvent[],
   timebase: number,
   channel = 0
 ) {
-  const metaEvents = track.events.filter((e) => e.type == "meta")
-
-  const rawEvents = toRawEvents(metaEvents.concat(noteEvents)).map(
-    setChannel(channel)
-  )
+  const rawEvents = toRawEvents(noteEvents).map(setChannel(channel))
 
   for (let i = 0; i < rawEvents.length; i++) {}
 

@@ -11,7 +11,7 @@ export default class MLTrackWrapper {
     this.disposer = disposer
 
     makeObservable(this, {
-      chunks: observable.shallow,
+      chunks: observable.deep,
     })
   }
 }

@@ -1,7 +1,6 @@
 import { clone } from "lodash"
 import { makeObservable, observable } from "mobx"
 import { NoteEvent, TrackEvent } from "../../../src/common/track"
-import Track from "../../../src/common/track/Track"
 import { isNoteEvent } from "../../common/track/identify"
 import { eventsToMidi } from "../common/midi/customMidiConversion"
 import { convertMidi } from "../controllers/controller"
@@ -14,9 +13,8 @@ export default class Chunk {
 
   private _audio: HTMLAudioElement = new Audio()
   private _velocityCache: number[] = []
-
   private _playTimeout: NodeJS.Timeout | null = null
-
+  private _fetching: boolean = false
   private _fetchController = new AbortController()
 
   constructor(notes: NoteEvent[]) {
@@ -40,6 +38,7 @@ export default class Chunk {
     makeObservable(this, {
       startTick: observable,
       endTick: observable,
+      audioSrc: observable,
     })
   }
 
@@ -52,17 +51,33 @@ export default class Chunk {
   }
 
   // Methods
-  public convertMidiToAudio(track: Track, timebase: number, channel = 0) {
-    const bytes = eventsToMidi(track, this.notes, timebase, channel)
+  public convertMidiToAudio(
+    timebase: number,
+    onFinish: (error: boolean) => void = () => {}
+  ) {
+    if (!this._fetching) {
+      this._fetching = true
 
-    const { signal } = this._fetchController
+      const bytes = eventsToMidi(this.notes, timebase)
 
-    convertMidi(bytes, signal)
-      .then((res) => res.blob())
-      .then((blob) => {
-        this.audioSrc = URL.createObjectURL(blob)
-        this._audio.src = this.audioSrc
-      })
+      const { signal } = this._fetchController
+
+      convertMidi(bytes, signal)
+        .then((res) => res.blob())
+        .then((blob) => {
+          this.audioSrc = URL.createObjectURL(blob)
+          this._audio.src = this.audioSrc
+          onFinish(false)
+        })
+        .catch((error: Error) => {
+          if (error.name === "AbortError") return
+          onFinish(true)
+          console.log("Error ", error)
+        })
+        .finally(() => {
+          this._fetching = false
+        })
+    }
   }
 
   public playFromStart(delaySeconds = 0) {
@@ -149,11 +164,11 @@ export default class Chunk {
     minRest: number = 0,
     minNotes: number = 1,
     maxNotes: number = 30
-  ): Chunk[] {
+  ): NoteEvent[][] {
     // Filter out non-note events
 
     const noteEvents: NoteEvent[] = allEvents.filter(isNoteEvent)
-    const chunks: Chunk[] = []
+    const chunks: NoteEvent[][] = []
 
     // Index for noteEvents
     let ind = 0
@@ -185,7 +200,7 @@ export default class Chunk {
         if (noteEvents[ind].tick - noteEnd > minRest && i + 1 >= minNotes) break
       }
 
-      chunks.push(new Chunk(notes))
+      chunks.push(notes)
     }
 
     return chunks
@@ -206,13 +221,17 @@ export default class Chunk {
 
     for (let i = 0; i < newChunks.length; i++) {
       if (chunkHash.has(newChunks[i].hash())) {
-        // @ts-ignore Should never be null
-        newChunks[i] = chunkHash.get(newChunks[i].hash())
-        chunkHash.delete(newChunks[i].hash())
+        const newChunk = chunkHash.get(newChunks[i].hash())
+
+        if (newChunk) {
+          newChunks[i] = newChunk
+
+          chunkHash.delete(newChunks[i].hash())
+        }
       }
     }
 
-    chunkHash.forEach((chunk, id) => chunk.destroy())
+    chunkHash.forEach((chunk, _id) => chunk.destroy())
 
     return newChunks
   }

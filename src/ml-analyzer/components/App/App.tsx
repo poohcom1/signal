@@ -27,7 +27,6 @@ export function App() {
 
   return (
     <React.StrictMode>
-      {/* @signal-ML */}
       <StoreContext.Provider value={new MLRootStore()}>
         <ThemeContext.Provider value={defaultTheme}>
           <ThemeProvider theme={defaultTheme}>
