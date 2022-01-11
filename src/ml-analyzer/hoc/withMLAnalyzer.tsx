@@ -2,10 +2,9 @@ import { autorun, reaction } from "mobx"
 import React from "react"
 import Song from "../../common/song/Song"
 import { StoreContext } from "../../main/hooks/useStores"
-import Chunk from "../models/Chunk"
+import Chunk, { FetchState } from "../models/Chunk"
 import MLTrackWrapper from "../models/MLTrackWrapper"
 import MLRootStore from "../stores/MLRootStore"
-import MLTracksStore from "../stores/MLTracksStore"
 
 export function withMLAnalyzer(Component: React.ComponentType) {
   return class extends React.Component {
@@ -19,22 +18,18 @@ export function withMLAnalyzer(Component: React.ComponentType) {
       super(props)
 
       this.analyze = this.analyze.bind(this)
-      this.addTrackAnalyzer = this.addTrackAnalyzer.bind(this)
+      this.createTrackAnalyzer = this.createTrackAnalyzer.bind(this)
     }
 
     componentDidMount() {
       const song: Song = this.context.song
-      const mlTracksMap: MLTracksStore = this.context.mlTrackStore
 
       this._trackCount = song.tracks.length
 
-      mlTracksMap.set(
-        song.tracks[1].id,
-        this.addTrackAnalyzer(song.tracks[1].id)
-      )
-
       // Main song observer
       autorun(this.analyze)
+
+      this.addTrackAnalyzer(song.tracks[1].id)
     }
 
     /**
@@ -48,31 +43,41 @@ export function withMLAnalyzer(Component: React.ComponentType) {
         for (let i = song.tracks.length - 1; i >= 1; i--) {
           // If new track
           if (!mlTracksMap.has(song.tracks[i].id)) {
-            const disposer = this.addTrackAnalyzer(song.tracks[i].id)
-
-            mlTracksMap.set(song.tracks[i].id, disposer)
-
+            this.addTrackAnalyzer(song.tracks[i].id)
             break
           }
         }
-      } else {
+      } else if (song.tracks.length < this._trackCount) {
         // Track removed
-        const existingIds = song.tracks.map((track) => track.id)
+        const existingIds = []
+
+        for (let i = 1; i < song.tracks.length; i++) {
+          existingIds.push(song.tracks[i].id)
+        }
 
         const keys = Array.from(mlTracksMap.keys())
 
         for (const id of keys) {
-          // If removed track
           if (!existingIds.includes(id)) {
             const trackWrapper = mlTracksMap.get(id)
-            if (trackWrapper) trackWrapper.disposer()
-
-            mlTracksMap.delete(id)
+            if (trackWrapper) {
+              mlTracksMap.delete(id)
+              trackWrapper.disposer()
+              trackWrapper.destroy()
+            }
 
             break
           }
         }
       }
+
+      this._trackCount = song.tracks.length
+    }
+
+    addTrackAnalyzer(id: string) {
+      const { mlTrackStore, song } = this.context
+
+      mlTrackStore.set(id, this.createTrackAnalyzer(id))
     }
 
     /**
@@ -80,7 +85,7 @@ export function withMLAnalyzer(Component: React.ComponentType) {
      * @param id Track id
      * @returns
      */
-    addTrackAnalyzer(id: string): any {
+    createTrackAnalyzer(id: string): MLTrackWrapper {
       const disposer = reaction(
         // Track events
         () => {
@@ -92,7 +97,7 @@ export function withMLAnalyzer(Component: React.ComponentType) {
             }
           }
 
-          console.warn("Track id not found. Somehow data is out of sync")
+          console.warn(`Track id ${id} not found. Somehow data is out of sync`)
           return song.tracks[1].events
         },
         // Sideeffect: Generate new chunks on new note
@@ -104,6 +109,7 @@ export function withMLAnalyzer(Component: React.ComponentType) {
 
           // Get track wrapper
           const trackWrapper = this.context.mlTrackStore.get(id)
+
           // Generate new chunks
           const noteEventsList = Chunk.splitNotes(events)
           const newChunks = []
@@ -111,24 +117,25 @@ export function withMLAnalyzer(Component: React.ComponentType) {
           for (const noteEvents of noteEventsList) {
             newChunks.push(new Chunk(noteEvents))
           }
-          // Compare and replace old chunks
 
+          // Compare and replace old chunks
           if (trackWrapper) {
             trackWrapper.chunks = Chunk.replaceChunks(
               trackWrapper.chunks,
               newChunks
             )
 
-            this._convertTimer = setTimeout(() => {
-              for (const chunk of trackWrapper.chunks) {
-                chunk.convertMidiToAudio(
+            for (const chunk of trackWrapper.chunks) {
+              if (chunk.state == FetchState.UnFetched) {
+                chunk.delayedConvert(
                   this.context.song.timebase,
-                  (error) => {
-                    this.context.mlTrackStore.triggerFlag()
-                  }
+                  (_state: FetchState) => {
+                    this.context.mlTrackStore.triggerChange()
+                  },
+                  3000
                 )
               }
-            }, 3000)
+            }
           }
         }
       )

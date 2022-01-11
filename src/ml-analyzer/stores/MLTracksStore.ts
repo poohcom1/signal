@@ -30,7 +30,9 @@ export default class MLTracksStore implements IMLTracksStore {
     this.mlTrackMap.set(id, track)
   }
 
-  delete(id: string) {}
+  delete(id: string) {
+    this.mlTrackMap.delete(id)
+  }
 
   has(id: string) {
     return this.mlTrackMap.has(id)
@@ -55,7 +57,7 @@ export default class MLTracksStore implements IMLTracksStore {
     return chunks
   }
 
-  triggerFlag() {
+  triggerChange() {
     this.changeFlag = !this.changeFlag
   }
 }

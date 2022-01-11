@@ -116,6 +116,7 @@ function drawChunk(
   const flagSize = 16
   ctx.fillStyle = {
     [FetchState.UnFetched]: "#ffffff2d",
+    [FetchState.Prefetch]: "#ffffff2d",
     [FetchState.Fetching]: "rgba(238, 255, 0, 0.575)",
     [FetchState.Fetched]: "rgba(0, 255, 0, 0.575)",
     [FetchState.Error]: "rgba(255, 0, 0, 0.5)",

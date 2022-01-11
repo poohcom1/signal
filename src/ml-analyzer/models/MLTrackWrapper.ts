@@ -14,4 +14,11 @@ export default class MLTrackWrapper {
       chunks: observable.deep,
     })
   }
+
+  /**
+   * Destroy all containing chunks
+   */
+  destroy() {
+    this.chunks.forEach((c) => c.destroy())
+  }
 }

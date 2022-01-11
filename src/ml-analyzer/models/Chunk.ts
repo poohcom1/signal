@@ -1,5 +1,5 @@
 import { clone } from "lodash"
-import { computed, makeObservable, observable } from "mobx"
+import { makeObservable, observable } from "mobx"
 import { NoteEvent, TrackEvent } from "../../../src/common/track"
 import { isNoteEvent } from "../../common/track/identify"
 import { eventsToMidi } from "../common/midi/customMidiConversion"
@@ -7,6 +7,7 @@ import { convertMidi } from "../controllers/controller"
 
 export enum FetchState {
   UnFetched,
+  Prefetch,
   Fetching,
   Fetched,
   Error,
@@ -17,11 +18,12 @@ export default class Chunk {
   public startTick: number = -1
   public endTick: number = -1
   public audioSrc: string = ""
+  public state: FetchState = FetchState.UnFetched
 
   private _audio: HTMLAudioElement = new Audio()
   private _velocityCache: number[] = []
+  private _convertTimeout: NodeJS.Timeout | null = null
   private _playTimeout: NodeJS.Timeout | null = null
-  private _fetching: boolean = false
   private _fetchController = new AbortController()
   private _error: Error | null = null
 
@@ -47,24 +49,8 @@ export default class Chunk {
       startTick: observable,
       endTick: observable,
       audioSrc: observable,
-      state: computed,
+      state: observable,
     })
-  }
-
-  get loaded() {
-    return this.audioSrc !== ""
-  }
-
-  get state(): FetchState {
-    if (this.audioSrc !== "") {
-      return FetchState.Fetched
-    } else if (this._fetching) {
-      return FetchState.Fetching
-    } else if (this._error) {
-      return FetchState.Error
-    } else {
-      return FetchState.UnFetched
-    }
   }
 
   public get tick() {
@@ -72,15 +58,31 @@ export default class Chunk {
   }
 
   // Methods
+  public delayedConvert(
+    timebase: number,
+    onUpdate: (state: FetchState) => void = () => {},
+    timeout: number = 3000
+  ) {
+    if (this._convertTimeout) {
+      clearTimeout(this._convertTimeout)
+    }
+
+    this.state = FetchState.Prefetch
+
+    this._convertTimeout = setTimeout(() => {
+      this.convertMidiToAudio(timebase, onUpdate)
+    }, timeout)
+  }
+
   public convertMidiToAudio(
     timebase: number,
     onUpdate: (state: FetchState) => void = () => {}
   ) {
-    if (!this._fetching && this.audioSrc === "") {
-      this._fetching = true
+    if (this.state !== FetchState.Fetching && this.audioSrc === "") {
       this._error = null
 
-      onUpdate(FetchState.Fetching)
+      this.state = FetchState.Fetching
+      onUpdate(this.state)
 
       const bytes = eventsToMidi(this.notes, timebase)
 
@@ -91,17 +93,16 @@ export default class Chunk {
         .then((blob) => {
           this.audioSrc = URL.createObjectURL(blob)
           this._audio.src = this.audioSrc
-          onUpdate(FetchState.Fetched)
+          this.state = FetchState.Fetched
+          onUpdate(this.state)
         })
         .catch((error: Error) => {
           if (error.name === "AbortError") return
 
-          onUpdate(FetchState.Error)
+          this.state = FetchState.Error
+          onUpdate(this.state)
           this._error = error
-          console.log("Error ", error)
-        })
-        .finally(() => {
-          this._fetching = false
+          console.log("Error ", this._error)
         })
     }
   }
@@ -166,11 +167,16 @@ export default class Chunk {
     }
   }
 
-  private hash() {
-    return JSON.stringify(this.notes)
+  public hash() {
+    return JSON.stringify(
+      this.notes.map((note) => [note.tick, note.noteNumber, note.duration])
+    )
   }
 
-  private destroy() {
+  /**
+   * Aborts pending fetch and free whatever is required
+   */
+  public destroy() {
     if (this.audioSrc !== "") URL.revokeObjectURL(this.audioSrc)
 
     this._fetchController.abort()
@@ -192,9 +198,8 @@ export default class Chunk {
     maxNotes: number = 30
   ): NoteEvent[][] {
     // Filter out non-note events
-
     const noteEvents: NoteEvent[] = allEvents.filter(isNoteEvent)
-    const chunks: NoteEvent[][] = []
+    const noteChunks: NoteEvent[][] = []
 
     // Index for noteEvents
     let ind = 0
@@ -226,10 +231,10 @@ export default class Chunk {
         if (noteEvents[ind].tick - noteEnd > minRest && i + 1 >= minNotes) break
       }
 
-      chunks.push(notes)
+      noteChunks.push(notes)
     }
 
-    return chunks
+    return noteChunks
   }
 
   /**
@@ -246,13 +251,19 @@ export default class Chunk {
     }
 
     for (let i = 0; i < newChunks.length; i++) {
-      if (chunkHash.has(newChunks[i].hash())) {
-        const commonChunk = chunkHash.get(newChunks[i].hash())
+      const hash = newChunks[i].hash()
+
+      if (chunkHash.has(hash)) {
+        const commonChunk = chunkHash.get(hash)
 
         if (commonChunk) {
-          newChunks[i] = commonChunk
+          // Copy everything except start time (to allow moving)
+          const start = newChunks[i].startTick
 
-          chunkHash.delete(newChunks[i].hash())
+          newChunks[i] = commonChunk
+          newChunks[i].startTick = start
+
+          chunkHash.delete(hash)
         }
       }
     }
