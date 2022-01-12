@@ -20,14 +20,24 @@ export default class Chunk {
   public audioSrc: string = ""
   public state: FetchState = FetchState.UnFetched
 
-  private _audio: HTMLAudioElement = new Audio()
+  private _audio: HTMLAudioElement
   private _velocityCache: number[] = []
   private _convertTimeout: NodeJS.Timeout | null = null
   private _playTimeout: NodeJS.Timeout | null = null
   private _fetchController = new AbortController()
   private _error: Error | null = null
 
-  constructor(notes: NoteEvent[]) {
+  constructor(
+    notes: NoteEvent[],
+    audio: HTMLAudioElement | undefined = undefined
+  ) {
+    // Conditionally set to allow testing without DOM
+    if (audio) {
+      this._audio = audio
+    } else {
+      this._audio = new Audio()
+    }
+
     if (notes) {
       notes.sort((a, b) => a.tick - b.tick)
 
@@ -259,9 +269,11 @@ export default class Chunk {
         if (commonChunk) {
           // Copy everything except start time (to allow moving)
           const start = newChunks[i].startTick
+          const end = newChunks[i].endTick
 
-          newChunks[i] = commonChunk
-          newChunks[i].startTick = start
+          newChunks[i] = commonChunk // Copy chunk
+          newChunks[i].startTick = start // Override start
+          newChunks[i].endTick = end
 
           chunkHash.delete(hash)
         }

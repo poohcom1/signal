@@ -83,9 +83,10 @@ export function withMLAnalyzer(Component: React.ComponentType) {
     /**
      * Generate track wrapper
      * @param id Track id
+     * @param delayMS Delay in ms before analyzer
      * @returns
      */
-    createTrackAnalyzer(id: string): MLTrackWrapper {
+    createTrackAnalyzer(id: string, delayMS = 3000): MLTrackWrapper {
       const disposer = reaction(
         // Track events
         () => {
@@ -132,7 +133,7 @@ export function withMLAnalyzer(Component: React.ComponentType) {
                   (_state: FetchState) => {
                     this.context.mlTrackStore.triggerChange()
                   },
-                  3000
+                  delayMS
                 )
               }
             }
