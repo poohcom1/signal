@@ -2,6 +2,7 @@ import useComponentSize from "@rehooks/component-size"
 import { observer } from "mobx-react-lite"
 import React, { FC, useCallback, useRef } from "react"
 import styled from "styled-components"
+import LyricsControl from "../../../ml-analyzer/components/ControlPane/LyricsControl/LyricsControl"
 import { Layout } from "../../Constants"
 import { useStores } from "../../hooks/useStores"
 import ExpressionGraph from "./Graph/ExpressionGraph"
@@ -31,6 +32,7 @@ export type ControlMode =
   | "modulation"
   | "pan"
   | "hold"
+  | "lyrics"
 
 const TabButton = styled.div`
   min-width: 8em;
@@ -77,6 +79,7 @@ const TabBar: FC<TabBarProps> = React.memo(({ onClick, selectedMode }) => {
     controlButton("Panpot", "pan"),
     controlButton("Expression", "expression"),
     controlButton("Hold Pedal", "hold"),
+    controlButton("Lyrics", "lyrics"),
   ]
 
   return (
@@ -150,6 +153,8 @@ const ControlPane: FC = observer(() => {
         return <ExpressionGraph {...controlSize} />
       case "hold":
         return <HoldPedalGraph {...controlSize} />
+      case "lyrics":
+        return <LyricsControl {...controlSize} />
     }
   })()
 
