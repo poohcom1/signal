@@ -16,7 +16,7 @@ export enum FetchState {
 export default class Chunk {
   public notes: NoteEvent[] = []
   public startTick: number = -1
-  public endTick: number = -1
+  public duration: number = -1
   public audioSrc: string = ""
   public state: FetchState = FetchState.UnFetched
 
@@ -26,6 +26,10 @@ export default class Chunk {
   private _playTimeout: NodeJS.Timeout | null = null
   private _fetchController = new AbortController()
   private _error: Error | null = null
+
+  get endTick(): number {
+    return this.startTick + this.duration
+  }
 
   constructor(
     notes: NoteEvent[],
@@ -38,33 +42,31 @@ export default class Chunk {
       this._audio = new Audio()
     }
 
-    if (notes) {
-      notes.sort((a, b) => a.tick - b.tick)
+    let endTick = 0
 
-      for (let i = 0; i < notes.length; i++) {
-        this.notes.push(clone(notes[i]))
-      }
+    notes.sort((a, b) => a.tick - b.tick)
 
-      this.startTick = this.notes[0].tick
-      this.endTick =
-        this.notes[this.notes.length - 1].duration +
-        this.notes[this.notes.length - 1].tick
-
-      for (let i = 0; i < notes.length; i++) {
-        this.notes[i].tick -= this.startTick
-      }
+    for (let i = 0; i < notes.length; i++) {
+      this.notes.push(clone(notes[i]))
     }
+
+    this.startTick = this.notes[0].tick
+    endTick =
+      this.notes[this.notes.length - 1].duration +
+      this.notes[this.notes.length - 1].tick
+
+    for (let i = 0; i < notes.length; i++) {
+      this.notes[i].tick -= this.startTick
+    }
+
+    this.duration = endTick - this.startTick
 
     makeObservable(this, {
       startTick: observable,
-      endTick: observable,
+      duration: observable,
       audioSrc: observable,
       state: observable,
     })
-  }
-
-  public get tick() {
-    return this.startTick
   }
 
   // Methods
@@ -127,7 +129,10 @@ export default class Chunk {
 
   public play(position: number, tickToMillisec: CallableFunction) {
     if (this.audioSrc) {
-      if (position >= this.startTick && position <= this.endTick) {
+      if (
+        position >= this.startTick &&
+        position <= this.startTick + this.duration
+      ) {
         this.cacheVelocity()
 
         const seconds =
@@ -182,6 +187,8 @@ export default class Chunk {
       this.notes.map((note) => [note.tick, note.noteNumber, note.duration])
     )
   }
+
+  public equal(other: Chunk) {}
 
   /**
    * Aborts pending fetch and free whatever is required
@@ -269,11 +276,9 @@ export default class Chunk {
         if (commonChunk) {
           // Copy everything except start time (to allow moving)
           const start = newChunks[i].startTick
-          const end = newChunks[i].endTick
 
           newChunks[i] = commonChunk // Copy chunk
           newChunks[i].startTick = start // Override start
-          newChunks[i].endTick = end
 
           chunkHash.delete(hash)
         }

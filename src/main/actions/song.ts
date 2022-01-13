@@ -4,6 +4,7 @@ import {
 } from "../../common/midi/midiConversion"
 import Song, { emptySong } from "../../common/song"
 import { emptyTrack } from "../../common/track"
+import MLRootStore from "../../ml-analyzer/stores/MLRootStore"
 import RootStore from "../stores/RootStore"
 import { pushHistory } from "./history"
 
@@ -73,6 +74,12 @@ export const openSong = (rootStore: RootStore) => (input: HTMLInputElement) => {
 export const addTrack = (rootStore: RootStore) => () => {
   pushHistory(rootStore)()
   rootStore.song.addTrack(emptyTrack(rootStore.song.tracks.length - 1))
+
+  // @signal-ml
+  ;(rootStore as MLRootStore).mlTrackStore.addTrack(
+    rootStore as MLRootStore,
+    rootStore.song.tracks.length - 1
+  )
 }
 
 export const removeTrack = (rootStore: RootStore) => (trackId: number) => {
@@ -85,6 +92,9 @@ export const removeTrack = (rootStore: RootStore) => (trackId: number) => {
   }
   pushHistory(rootStore)()
   rootStore.song.removeTrack(trackId)
+
+  // @signal-ml
+  ;(rootStore as MLRootStore).mlTrackStore.removeTrack(trackId)
 }
 
 export const selectTrack = (rootStore: RootStore) => (trackId: number) => {
@@ -96,6 +106,12 @@ export const insertTrack = (rootStore: RootStore) => (trackId: number) => {
   pushHistory(rootStore)()
   rootStore.song.insertTrack(
     emptyTrack(rootStore.song.tracks.length - 1),
+    trackId
+  )
+
+  // @signal-ml
+  ;(rootStore as MLRootStore).mlTrackStore.insertTrack(
+    rootStore as MLRootStore,
     trackId
   )
 }

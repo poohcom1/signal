@@ -254,6 +254,9 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
     [rootStore, scrollLeft, pixelsPerTick, timeSignatures]
   )
 
+  // @signal-ml
+  const { song, mlTrackStore } = rootStore as MLRootStore
+
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D) => {
       ctx.clearRect(0, 0, width, height)
@@ -266,23 +269,20 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
       drawTimeSignatures(ctx, height, timeSignatures, pixelsPerTick, theme)
 
       // @signal-ml
-      const selectedTrack = rootStore.song.selectedTrack
+      const selectedTrackId = song.selectedTrackId
 
-      if (selectedTrack) {
-        const selectedTrackWrapper = (
-          rootStore as MLRootStore
-        ).mlTrackStore.get(selectedTrack.id)
+      const selectedTrackWrapper = mlTrackStore.get(selectedTrackId)
 
-        if (selectedTrackWrapper) {
-          const chunks = selectedTrackWrapper.chunks
+      if (selectedTrackWrapper) {
+        const chunks = selectedTrackWrapper.chunks
 
-          if (chunks) {
-            for (let i = 0; i < chunks.length; i++) {
-              drawChunk(ctx, chunks[i], height, pixelsPerTick, theme)
-            }
+        if (chunks) {
+          for (let i = 0; i < chunks.length; i++) {
+            drawChunk(ctx, chunks[i], height, pixelsPerTick, theme)
           }
         }
       }
+
       // end
 
       ctx.restore()
@@ -294,9 +294,10 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
       beats,
       timeSignatures,
       // @signal-ml
-      rootStore.song.selectedTrack?.events.length, // on new note
-      rootStore.song.tracks.length, // on new track
-      (rootStore as MLRootStore).mlTrackStore.changeFlag, // on force updates
+      song.selectedTrack?.events.length, // on new note
+      song.tracks.length, // on new track
+      song.selectedTrackId, // on track selected
+      mlTrackStore.changeFlag, // on force updates
       // end
     ]
   )

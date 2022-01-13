@@ -7,9 +7,9 @@ import { ThemeProvider } from "styled-components"
 import { GlobalCSS } from "../../../common/theme/GlobalCSS"
 import { theme } from "../../../common/theme/muiTheme"
 import { defaultTheme } from "../../../common/theme/Theme"
+import MLRootStore from "../../../ml-analyzer/stores/MLRootStore" // @signal-ml
 import { StoreContext } from "../../hooks/useStores"
 import { ThemeContext } from "../../hooks/useTheme"
-import RootStore from "../../stores/RootStore"
 import { GlobalKeyboardShortcut } from "../KeyboardShortcut/GlobalKeyboardShortcut"
 import { RootView } from "../RootView/RootView"
 
@@ -24,7 +24,8 @@ Sentry.init({
 export function App() {
   return (
     <React.StrictMode>
-      <StoreContext.Provider value={new RootStore()}>
+      {/* @signal-ml */}
+      <StoreContext.Provider value={new MLRootStore()}>
         <ThemeContext.Provider value={defaultTheme}>
           <ThemeProvider theme={defaultTheme}>
             <MuiThemeProvider theme={theme}>

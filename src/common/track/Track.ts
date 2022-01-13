@@ -9,7 +9,6 @@ import {
 } from "midifile-ts"
 import { action, computed, makeObservable, observable, transaction } from "mobx"
 import { createModelSchema, list, primitive } from "serializr"
-import { v4 as uudiv4 } from "uuid"
 import { pojo } from "../helpers/pojo"
 import { localized } from "../localize/localizedString"
 import { getInstrumentName } from "../midi/GM"
@@ -33,8 +32,6 @@ import { validateMidiEvent } from "./validate"
 export default class Track {
   events: TrackEvent[] = []
   channel: number | undefined = undefined
-  // @signal-ml
-  id: string = uudiv4()
 
   private lastEventId = 0
 
@@ -330,6 +327,4 @@ createModelSchema(Track, {
   events: list(pojo),
   lastEventId: primitive(),
   channel: primitive(),
-  // @signal-ml
-  id: primitive(),
 })

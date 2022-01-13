@@ -11,7 +11,6 @@ import { GlobalKeyboardShortcut } from "../../../main/components/KeyboardShortcu
 import { RootView } from "../../../main/components/RootView/RootView"
 import { StoreContext } from "../../../main/hooks/useStores"
 import { ThemeContext } from "../../../main/hooks/useTheme"
-import { withMLAnalyzer } from "../../hoc/withMLAnalyzer"
 import MLRootStore from "../../stores/MLRootStore"
 
 Sentry.init({
@@ -23,8 +22,6 @@ Sentry.init({
 })
 
 export function App() {
-  const MLRootView = withMLAnalyzer(RootView)
-
   return (
     <React.StrictMode>
       <StoreContext.Provider value={new MLRootStore()}>
@@ -34,7 +31,7 @@ export function App() {
               <StylesProvider injectFirst>
                 <GlobalKeyboardShortcut />
                 <GlobalCSS />
-                <MLRootView />
+                <RootView />
               </StylesProvider>
             </MuiThemeProvider>
           </ThemeProvider>

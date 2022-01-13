@@ -1,6 +1,8 @@
-import { makeObservable, observable } from "mobx"
-import Chunk from "../models/Chunk"
+import { pullAt } from "lodash"
+import { makeObservable, observable, reaction } from "mobx"
+import Chunk, { FetchState } from "../models/Chunk"
 import MLTrackWrapper from "../models/MLTrackWrapper"
+import MLRootStore from "./MLRootStore"
 
 export interface IMLTracksStore {
   get: (id: string) => MLTrackWrapper | undefined
@@ -11,45 +13,112 @@ export interface IMLTracksStore {
   forEach: (callback: (value: MLTrackWrapper, id: string) => void) => void
 }
 
-export default class MLTracksStore implements IMLTracksStore {
-  public mlTrackMap: Map<string, MLTrackWrapper> = new Map()
+/**
+ * Generate track wrapper
+ * @param id Track id
+ * @param delayMS Delay in ms before analyzer
+ * @returns
+ */
+function createTrackAnalyzer(
+  rootStore: MLRootStore,
+  id: number,
+  delayMS = 3000
+): MLTrackWrapper {
+  const disposer = reaction(
+    // Track events
+    () => rootStore.song.tracks[id].events,
+    // Sideeffect: Generate new chunks on new note
+    // Could be better optimized if changed note is known
+    (events) => {
+      // Get track wrapper
+      const trackWrapper = rootStore.mlTrackStore.get(id)
+
+      // Generate new chunks
+      const noteEventsList = Chunk.splitNotes(events)
+      const newChunks = []
+
+      for (const noteEvents of noteEventsList) {
+        newChunks.push(new Chunk(noteEvents))
+      }
+
+      // Compare and replace old chunks
+      if (trackWrapper) {
+        trackWrapper.chunks = Chunk.replaceChunks(
+          trackWrapper.chunks,
+          newChunks
+        )
+
+        for (const chunk of trackWrapper.chunks) {
+          if (chunk.state == FetchState.UnFetched) {
+            chunk.delayedConvert(
+              rootStore.song.timebase,
+              (_state: FetchState) => {
+                rootStore.mlTrackStore.triggerChange()
+              },
+              delayMS
+            )
+          }
+        }
+      }
+    }
+  )
+
+  return new MLTrackWrapper(disposer)
+}
+
+export default class MLTracksStore {
+  public mlTracks: MLTrackWrapper[] = [{} as unknown as MLTrackWrapper]
   public changeFlag: boolean = false // Very hacky way to forward changes, but probably more optimized than just observing the entire mlTrackMap
 
   constructor() {
     makeObservable(this, {
-      mlTrackMap: observable.deep,
+      mlTracks: observable.deep,
       changeFlag: observable,
     })
   }
 
-  get(id: string): MLTrackWrapper | undefined {
-    return this.mlTrackMap.get(id)
+  addTrack(rootStore: MLRootStore, trackId: number) {
+    this.mlTracks.push(createTrackAnalyzer(rootStore, trackId))
   }
 
-  set(id: string, track: MLTrackWrapper) {
-    this.mlTrackMap.set(id, track)
+  insertTrack(rootStore: MLRootStore, trackId: number) {
+    const newTrack = createTrackAnalyzer(rootStore, trackId)
+
+    this.mlTracks.splice(trackId, 0, newTrack)
   }
 
-  delete(id: string) {
-    this.mlTrackMap.delete(id)
+  removeTrack(trackId: number) {
+    pullAt(this.mlTracks, trackId)
   }
 
-  has(id: string) {
-    return this.mlTrackMap.has(id)
+  get(id: number): MLTrackWrapper | undefined {
+    return this.mlTracks[id]
+  }
+
+  set(id: number, track: MLTrackWrapper) {
+    this.mlTracks[id] = track
+  }
+
+  delete(id: number) {
+    pullAt(this.mlTracks, id)
+  }
+
+  has(id: number) {
+    return id < this.mlTracks.length
   }
 
   keys() {
-    return this.mlTrackMap.keys()
+    return this.mlTracks
   }
 
-  forEach(callback: (value: MLTrackWrapper, id: string) => void) {
-    this.mlTrackMap.forEach(callback)
+  forEach(callback: (value: MLTrackWrapper) => void) {
+    this.mlTracks.forEach(callback)
   }
 
   getChunks(): Chunk[] {
     const chunks: Chunk[] = []
 
-    const wrappers = Array.from(this.mlTrackMap.values())
+    const wrappers = this.mlTracks
     for (const wrapper of wrappers) {
       chunks.push(...wrapper.chunks)
     }

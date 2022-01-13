@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { autorun, reaction } from "mobx"
 import React from "react"
 import Song from "../../common/song/Song"

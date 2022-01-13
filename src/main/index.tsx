@@ -2,7 +2,7 @@ import { configure } from "mobx"
 import React from "react"
 import ReactDOM from "react-dom"
 import { localized } from "../common/localize/localizedString"
-import { App } from "../ml-analyzer/components/App/App" // @signal-ml
+import { App } from "./components/App/App"
 
 configure({
   enforceActions: "never",
