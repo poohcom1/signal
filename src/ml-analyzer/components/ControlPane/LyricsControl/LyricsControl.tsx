@@ -6,6 +6,7 @@ import { GraphAxis } from "../../../../main/components/ControlPane/Graph/GraphAx
 import { useStores } from "../../../../main/hooks/useStores"
 import { useTheme } from "../../../../main/hooks/useTheme"
 import {
+  clearDanglingLyrics,
   getOrAddLyric,
   setLyric,
   TrackLyricsEvent,
@@ -25,7 +26,7 @@ const Parent = styled.div`
 `
 
 interface LyricNote {
-  id: number
+  noteId: number
   x: number
   y: number
   noteNumber: number
@@ -41,11 +42,13 @@ const LyricsControl: FC<PianoVelocityControlProps> = observer(
     const rootStore = useStores()
     const { transform, scrollLeft, windowedEvents } = rootStore.pianoRollStore
 
+    clearDanglingLyrics(rootStore)()
+
     const lyricNotes = windowedEvents.filter(isNoteEvent).map((note) => {
       const lyric = getOrAddLyric(rootStore)(note) as TrackLyricsEvent
 
       return {
-        id: lyric.id,
+        noteId: note.id,
         x: transform.getX(lyric.tick),
         y: 0,
         noteNumber: note.noteNumber,
@@ -83,7 +86,7 @@ const LyricsControl: FC<PianoVelocityControlProps> = observer(
           {lyricNotes.map((item) => {
             return (
               <LyricSyllable
-                key={item.id}
+                key={item.noteId}
                 {...item}
                 setLyric={setLyric(rootStore)}
               />

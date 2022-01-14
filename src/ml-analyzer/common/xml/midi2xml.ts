@@ -1,4 +1,7 @@
-import { NoteEvent } from "../../../../src/common/track"
+import { isNoteEvent, NoteEvent } from "../../../../src/common/track"
+import { downloadBlob } from "../../../common/helpers/Downloader"
+import RootStore from "../../../main/stores/RootStore"
+import { getOrAddLyric, isLyricsEvent } from "../../actions/lyrics"
 import {
   createTemplate,
   MusicXMLNote,
@@ -109,14 +112,14 @@ export function notesToXMLNotes(
   return xmlNotes
 }
 
-export default function notesToXML(
+export function notesToXML(
   noteEvents: NoteEvent[],
   lyrics: string[],
   tempo: number
 ) {
   const notes = notesToXMLNotes(noteEvents, lyrics)
 
-  const xmlString = createTemplate(
+  return createTemplate(
     [
       {
         notes,
@@ -125,4 +128,23 @@ export default function notesToXML(
     ],
     tempo
   )
+}
+
+export const downloadSelectedTrackXML = (rootStore: RootStore) => () => {
+  const selectedTrack = rootStore.song.selectedTrack
+
+  if (!selectedTrack) {
+    alert("No track selected!")
+    return
+  }
+
+  const notes = selectedTrack.events.filter(isNoteEvent)
+
+  console.log(selectedTrack.events.filter(isLyricsEvent))
+
+  const lyrics = notes.map((note) => getOrAddLyric(rootStore)(note)!.text)
+
+  const xml = notesToXML(notes, lyrics, rootStore.pianoRollStore.currentTempo)
+
+  downloadBlob(new Blob([xml], { type: "text/plain" }), "notes.musicxml")
 }

@@ -13,12 +13,15 @@ export function isLyricsEvent(event: TrackEvent): event is TrackLyricsEvent {
   return (event as unknown as MetaEvent).subtype === "lyrics"
 }
 
+/**
+ * Gets or creates a lyrics for the given note in the selected track
+ * @param rootStore RootStore
+ * @returns
+ */
 export const getOrAddLyric =
   (rootStore: RootStore) =>
-  (note: NoteEvent, defaultLyrics = "_"): TrackLyricsEvent | void => {
-    const selectedTrack = rootStore.song.selectedTrack
-
-    if (!selectedTrack) return
+  (note: NoteEvent, defaultLyrics = "_"): TrackLyricsEvent => {
+    const selectedTrack = rootStore.song.selectedTrack!
 
     const lyricEvents = selectedTrack.events.filter(isLyricsEvent)
 
@@ -48,9 +51,7 @@ export const getOrAddLyric =
 
 export const setLyric =
   (rootStore: RootStore) => (noteId: number, lyric: string) => {
-    const selectedTrack = rootStore.song.selectedTrack
-
-    if (!selectedTrack) return
+    const selectedTrack = rootStore.song.selectedTrack!
 
     const lyricEvent = selectedTrack.events
       .filter(isLyricsEvent)
@@ -59,3 +60,15 @@ export const setLyric =
     if (lyricEvent) lyricEvent.text = lyric
     else console.warn("actions/lyrics: Lyric event not found")
   }
+
+export const clearDanglingLyrics = (rootStore: RootStore) => () => {
+  const selectedTrack = rootStore.song.selectedTrack!
+
+  const lyricEvents = selectedTrack.events.filter(isLyricsEvent)
+
+  for (const event of lyricEvents) {
+    if (!selectedTrack.events.find((e) => e.id === event.noteId)) {
+      selectedTrack.removeEvent(event.id)
+    }
+  }
+}

@@ -5,7 +5,7 @@ interface IProps {
   x: number
   y: number
   width: number
-  id: number
+  noteId: number
   lyric: string
   setLyric: (tick: number, lyric: string) => void
 }
@@ -76,7 +76,7 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
   }
 
   handleSubmit() {
-    this.props.setLyric(this.props.id, this.state.text)
+    this.props.setLyric(this.props.noteId, this.state.text)
     this.setState({ editing: false })
   }
 
