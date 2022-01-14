@@ -4,8 +4,9 @@ import styled from "styled-components"
 interface IProps {
   x: number
   y: number
-  tick: number
-  text: string | null
+  width: number
+  id: number
+  lyric: string
   setLyric: (tick: number, lyric: string) => void
 }
 
@@ -14,19 +15,24 @@ interface IState {
   text: string
 }
 
-interface SyllableDivProps {
-  x: number
-  y: number
+interface SyllableDivProps extends Partial<IProps> {
   display: boolean
 }
 
 const SyllableDiv = styled.div<SyllableDivProps>`
   margin: 0;
-  width: 20px;
+  width: ${(props) => props.width}px;
   position: absolute;
   left: ${(props) => props.x}px;
   top: ${(props) => props.y}px;
   display: ${(props) => (props.display ? "block" : "none")};
+
+  font-size: 20px;
+  padding-left: 5px;
+
+  &:hover {
+    background-color: rgb(0, 0, 0, 0.5);
+  }
 `
 
 const SyllableEdit = styled.input<SyllableDivProps>`
@@ -36,6 +42,8 @@ const SyllableEdit = styled.input<SyllableDivProps>`
   left: ${(props) => props.x}px;
   top: ${(props) => props.y}px;
   display: ${(props) => (props.display ? "block" : "none")};
+
+  font-size: 20px;
 `
 
 export default class LyricSyllable extends React.Component<IProps, IState> {
@@ -46,13 +54,19 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
 
     this.state = {
       editing: false,
-      text: this.props.text ?? "",
+      text: this.props.lyric ?? "",
     }
 
     this._inputRef = React.createRef()
 
     this.handleClick = this.handleClick.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
+  }
+
+  componentDidUpdate(prevProps: IProps) {
+    if (this.props.lyric !== prevProps.lyric) {
+      this.setState({ text: this.props.lyric })
+    }
   }
 
   handleClick() {
@@ -62,7 +76,7 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
   }
 
   handleSubmit() {
-    this.props.setLyric(this.props.tick, this.state.text)
+    this.props.setLyric(this.props.id, this.state.text)
     this.setState({ editing: false })
   }
 
@@ -72,7 +86,8 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
         <SyllableEdit
           ref={this._inputRef}
           x={this.props.x}
-          y={0}
+          y={this.props.y}
+          width={this.props.width}
           display={this.state.editing}
           value={this.state.text}
           onKeyDown={(ke) => {
@@ -88,7 +103,8 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
         <SyllableDiv
           display={!this.state.editing}
           x={this.props.x}
-          y={0}
+          y={this.props.y}
+          width={this.props.width}
           onClick={this.handleClick}
         >
           {this.state.text}

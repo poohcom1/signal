@@ -1,12 +1,15 @@
-import { LyricsEvent } from "midifile-ts"
 import { observer } from "mobx-react-lite"
 import React, { FC } from "react"
 import styled from "styled-components"
-import { toTrackEvents } from "../../../../common/helpers/toTrackEvents"
-import Track, { isNoteEvent, TrackEvent } from "../../../../common/track"
+import { isNoteEvent } from "../../../../common/track"
 import { GraphAxis } from "../../../../main/components/ControlPane/Graph/GraphAxis"
 import { useStores } from "../../../../main/hooks/useStores"
 import { useTheme } from "../../../../main/hooks/useTheme"
+import {
+  getOrAddLyric,
+  setLyric,
+  TrackLyricsEvent,
+} from "../../../actions/lyrics"
 import LyricSyllable from "./LyricSyllable"
 
 export interface PianoVelocityControlProps {
@@ -21,88 +24,71 @@ const Parent = styled.div`
   left: 0;
 `
 
-type TrackLyricsEvent = TrackEvent & LyricsEvent
-
-interface MetaEvent {
-  subtype: string
-}
-
-function isLyricsEvent(event: TrackEvent): event is TrackLyricsEvent {
-  return (event as unknown as MetaEvent).subtype === "lyrics"
-}
-
-function addOrGetLyric(
-  track: Track,
-  tick: number,
-  defaultLyrics = "_"
-): TrackLyricsEvent {
-  const lyricEvents = track.events.filter(isLyricsEvent)
-
-  const lyric = lyricEvents.find((e) => e.tick === tick)
-
-  if (lyric) {
-    return lyric
-  } else {
-    const lyricEvent: LyricsEvent = {
-      type: "meta",
-      subtype: "lyrics",
-      text: defaultLyrics,
-      deltaTime: tick,
-    }
-
-    const trackLyricEvent = toTrackEvents([lyricEvent])
-
-    track.addEvents(trackLyricEvent)
-
-    return trackLyricEvent as unknown as TrackLyricsEvent
-  }
+interface LyricNote {
+  id: number
+  x: number
+  y: number
+  noteNumber: number
+  height: number
+  width: number
+  tick: number
+  lyric: string
 }
 
 const LyricsControl: FC<PianoVelocityControlProps> = observer(
   ({ width, height }: PianoVelocityControlProps) => {
     const theme = useTheme()
     const rootStore = useStores()
-    const { cursorX, transform, scrollLeft, windowedEvents } =
-      rootStore.pianoRollStore
-    const { beats } = rootStore.pianoRollStore.rulerStore
+    const { transform, scrollLeft, windowedEvents } = rootStore.pianoRollStore
 
-    const { selectedTrack } = rootStore.song
-
-    if (!selectedTrack) return <></>
-
-    const items = windowedEvents.filter(isNoteEvent).map((note) => {
-      const lyric = addOrGetLyric(selectedTrack, note.tick)
+    const lyricNotes = windowedEvents.filter(isNoteEvent).map((note) => {
+      const lyric = getOrAddLyric(rootStore)(note) as TrackLyricsEvent
 
       return {
         id: lyric.id,
         x: transform.getX(lyric.tick),
+        y: 0,
+        noteNumber: note.noteNumber,
+        height: 20,
+        width: transform.getX(note.duration),
         tick: lyric.tick,
         lyric: lyric.text,
       }
     })
 
-    const setLyric = (tick: number, lyric: string) => {
-      const lyricEvent = selectedTrack.events
-        .filter(isLyricsEvent)
-        .find((l) => l.tick === tick)
+    const lyricXMap: Map<number, [LyricNote]> = new Map()
 
-      if (lyricEvent) lyricEvent.text = lyric
-      else console.warn("LyricsControl: Lyric event not found")
+    for (const lyricNote of lyricNotes) {
+      if (lyricXMap.has(lyricNote.x)) {
+        lyricXMap.get(lyricNote.x)!.push(lyricNote)
+      } else {
+        lyricXMap.set(lyricNote.x, [lyricNote])
+      }
+    }
+
+    for (const overlaps of Array.from(lyricXMap.values())) {
+      if (overlaps.length > 1) {
+        overlaps.sort((a, b) => b.noteNumber - a.noteNumber)
+
+        for (let i = 0, len = overlaps.length; i < len; i++) {
+          overlaps[i].y = i * overlaps[i].height
+        }
+      }
     }
 
     return (
       <Parent>
         <GraphAxis values={[]} onClick={() => {}} />
-        <div style={{ display: "flex", position: "relative" }}>
-          {items.map((item) => (
-            <LyricSyllable
-              x={item.x - scrollLeft}
-              y={0}
-              tick={item.tick}
-              text={item.lyric}
-              setLyric={setLyric}
-            />
-          ))}
+        <div style={{ display: "flex", position: "relative", height: height }}>
+          {lyricNotes.map((item) => {
+            return (
+              <LyricSyllable
+                key={item.id}
+                {...item}
+                setLyric={setLyric(rootStore)}
+              />
+            )
+          })}
         </div>
       </Parent>
     )
