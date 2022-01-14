@@ -3,6 +3,7 @@ import Color from "color"
 import { observer } from "mobx-react-lite"
 import React, { ChangeEvent, FC, useCallback, useRef } from "react"
 import { localized } from "../../../common/localize/localizedString"
+import { downloadSelectedTrackXML } from "../../../ml-analyzer/common/xml/midi2xml"
 import { createSong, openSong, saveSong } from "../../actions"
 import { useStores } from "../../hooks/useStores"
 import { Tab } from "./Navigation"
@@ -60,6 +61,12 @@ export const FileMenuButton: FC = observer(() => {
     exportStore.openExportDialog = true
   }
 
+  // @signal-ml
+  const onClickExportXML = () => {
+    handleClose()
+    downloadSelectedTrackXML(rootStore)()
+  }
+
   const ref = useRef<HTMLDivElement>(null)
 
   const classes = useStyles({})
@@ -103,6 +110,11 @@ export const FileMenuButton: FC = observer(() => {
 
         <MenuItem onClick={onClickExport}>
           {localized("export-audio", "Export Audio")}
+        </MenuItem>
+
+        {/* @signal-ml */}
+        <MenuItem onClick={onClickExportXML}>
+          {localized("export-xml", "Export Track as XML")}
         </MenuItem>
       </Menu>
     </>

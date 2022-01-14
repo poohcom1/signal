@@ -99,5 +99,6 @@ export default {
     "exporting-audio": "オーディオを書き出し中...",
     "file-type": "ファイル形式",
     "export-error-too-short": "曲が短すぎます",
+    "export-xml": "トラックXML書き出し",
   },
 } as { [key: string]: { [key: string]: string } }
