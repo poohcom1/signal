@@ -119,8 +119,9 @@ export default class MLTracksStore {
     const chunks: Chunk[] = []
 
     const wrappers = this.mlTracks
-    for (const wrapper of wrappers) {
-      chunks.push(...wrapper.chunks)
+
+    for (let i = 1; i < wrappers.length; i++) {
+      chunks.push(...wrappers[i].chunks)
     }
 
     return chunks
