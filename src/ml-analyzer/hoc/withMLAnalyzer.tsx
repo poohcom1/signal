@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import { autorun, reaction } from "mobx"
+import { reaction } from "mobx"
 import React from "react"
 import Song from "../../common/song/Song"
 import { StoreContext } from "../../main/hooks/useStores"
@@ -28,52 +28,7 @@ export function withMLAnalyzer(Component: React.ComponentType) {
 
       this._trackCount = song.tracks.length
 
-      // Main song observer
-      autorun(this.analyze)
-
       this.addTrackAnalyzer(song.tracks[1].id)
-    }
-
-    /**
-     * Autorun callback to setup individual tracks reaction and deal with disposal
-     */
-    analyze() {
-      const { song, mlTrackStore: mlTracksMap } = this.context
-
-      if (song.tracks.length > this._trackCount) {
-        // Track added
-        for (let i = song.tracks.length - 1; i >= 1; i--) {
-          // If new track
-          if (!mlTracksMap.has(song.tracks[i].id)) {
-            this.addTrackAnalyzer(song.tracks[i].id)
-            break
-          }
-        }
-      } else if (song.tracks.length < this._trackCount) {
-        // Track removed
-        const existingIds = []
-
-        for (let i = 1; i < song.tracks.length; i++) {
-          existingIds.push(song.tracks[i].id)
-        }
-
-        const keys = Array.from(mlTracksMap.keys())
-
-        for (const id of keys) {
-          if (!existingIds.includes(id)) {
-            const trackWrapper = mlTracksMap.get(id)
-            if (trackWrapper) {
-              mlTracksMap.delete(id)
-              trackWrapper.disposer()
-              trackWrapper.destroy()
-            }
-
-            break
-          }
-        }
-      }
-
-      this._trackCount = song.tracks.length
     }
 
     addTrackAnalyzer(id: string) {

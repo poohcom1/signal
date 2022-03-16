@@ -1,7 +1,7 @@
 import Track from "../../common/track/Track"
 import { trackToMidi } from "../common/midi/customMidiConversion"
 
-const BACKEND_URL = "http://192.168.1.40:5000"
+const BACKEND_URL = "http://localhost:5000" // "http://192.168.1.40:5000"
 
 export function convertTrack(
   track: Track,
@@ -35,4 +35,8 @@ export function convertMidi(
     signal: signal,
     //mode: "no-cors",
   })
+}
+
+export function getModels(): Promise<Response> {
+  return fetch(`${BACKEND_URL}/models`, { method: "GET" })
 }

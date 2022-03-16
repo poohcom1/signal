@@ -1,6 +1,7 @@
 import { observer } from "mobx-react-lite"
-import React, { FC } from "react"
+import { FC } from "react"
 import styled from "styled-components"
+import { TrackSettings } from "../../../ml-analyzer/components/TrackSettings/TrackSettings"
 import { useStores } from "../../hooks/useStores"
 import { ArrangeEditor } from "../ArrangeView/ArrangeEditor"
 import { BuildInfo } from "../BuildInfo"
@@ -56,5 +57,7 @@ export const RootView: FC = () => (
     <MIDIDeviceDialog />
     <ExportDialog />
     <ExportProgressDialog />
+    {/* @signal-ml */}
+    <TrackSettings />
   </>
 )

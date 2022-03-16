@@ -4,6 +4,9 @@ import Chunk from "../models/Chunk"
 export default class MLTrackWrapper {
   public disposer: IReactionDisposer
   public chunks: Chunk[] = []
+  // ML Data
+  public model: string = ""
+  public modelOptions: Record<string, string | boolean | number> = {}
 
   constructor(disposer: IReactionDisposer) {
     this.disposer = disposer

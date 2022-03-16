@@ -26,10 +26,18 @@ function createTrackAnalyzer(
 ): MLTrackWrapper {
   const disposer = reaction(
     // Track events
-    () => rootStore.song.tracks[id].events,
+    () => {
+      if (id < rootStore.song.tracks.length)
+        return rootStore.song.tracks[id]?.events
+      else return null
+    },
     // Sideeffect: Generate new chunks on new note
     // Could be better optimized if changed note is known
     (events) => {
+      if (!events) {
+        return
+      }
+
       // Get track wrapper
       const trackWrapper = rootStore.mlTrackStore.get(id)
 
@@ -79,6 +87,9 @@ export default class MLTracksStore {
 
   addTrack(rootStore: MLRootStore, trackId: number) {
     this.mlTracks.push(createTrackAnalyzer(rootStore, trackId))
+
+    rootStore.mlRootViewStore.currentSettingsTrack = trackId
+    rootStore.mlRootViewStore.openTrackSettings = true
   }
 
   insertTrack(rootStore: MLRootStore, trackId: number) {
@@ -88,7 +99,9 @@ export default class MLTracksStore {
   }
 
   removeTrack(trackId: number) {
-    pullAt(this.mlTracks, trackId)
+    const wrapper = pullAt(this.mlTracks, trackId)[0]
+
+    wrapper.disposer()
   }
 
   get(id: number): MLTrackWrapper | undefined {
@@ -100,7 +113,9 @@ export default class MLTracksStore {
   }
 
   delete(id: number) {
-    pullAt(this.mlTracks, id)
+    const wrapper = pullAt(this.mlTracks, id)[0]
+
+    wrapper.disposer()
   }
 
   has(id: number) {
