@@ -1,9 +1,13 @@
 import {
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
   MenuItem,
   Select,
 } from "@material-ui/core"
@@ -15,8 +19,8 @@ import { getModels } from "../../controllers/controller"
 import MLRootStore from "../../stores/MLRootStore"
 
 export const TrackSettings: FC = observer(() => {
-  const rootStore = useStores()
-  const { mlRootViewStore, mlTrackStore, song } = useStores() as MLRootStore
+  const rootStore = useStores() as MLRootStore
+  const { mlRootViewStore, mlTrackStore } = rootStore
 
   const close = () => (mlRootViewStore.openTrackSettings = false)
 
@@ -25,11 +29,18 @@ export const TrackSettings: FC = observer(() => {
   useEffect(() => {
     getModels()
       .then((res) => res.json())
-      .then(setModels)
+      .then((models: string[]) => {
+        setModels(models)
+        setModel(models[0])
+      })
       .catch((e) => {
         alert(e + " Please try again in a couple minutes!")
       })
   }, [])
+
+  // Option data
+  const [isRegularTrack, setIsRegularTrack] = useState(false)
+  const [model, setModel] = useState<string>("")
 
   // Dialog actions callbacks
   const handleCancel = useCallback(() => {
@@ -38,21 +49,57 @@ export const TrackSettings: FC = observer(() => {
   }, [])
 
   const handleCreate = useCallback(() => {
+    if (!isRegularTrack) {
+      const track = mlTrackStore.addTrack(
+        rootStore,
+        mlRootViewStore.currentSettingsTrack
+      )
+      track.model = model
+    } else {
+      mlTrackStore.addRegularTrack(
+        rootStore,
+        mlRootViewStore.currentSettingsTrack
+      )
+    }
     close()
-  }, [])
+  }, [isRegularTrack, model, mlRootViewStore.currentSettingsTrack])
 
   return (
     <Dialog open={mlRootViewStore.openTrackSettings} onClose={close}>
       <DialogTitle>{`Track #${mlRootViewStore.currentSettingsTrack} Settings`}</DialogTitle>
 
       <DialogContent>
-        <Select value={models ? models[0] : ""}>
-          {models ? (
-            models.map((model) => <MenuItem value={model}>{model}</MenuItem>)
-          ) : (
-            <MenuItem>Loading models...</MenuItem>
-          )}
-        </Select>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={isRegularTrack}
+              onChange={(e) => {
+                setIsRegularTrack(e.target.checked)
+              }}
+              inputProps={{ "aria-label": "controlled" }}
+            />
+          }
+          label="Create regular track"
+        />
+        <div style={{ display: isRegularTrack ? "none" : "block" }}>
+          <FormControl variant="outlined" fullWidth margin="normal">
+            <InputLabel id="model-select">Model</InputLabel>
+            <Select
+              label="Model"
+              labelId="model-select"
+              value={model}
+              onChange={(e) => setModel(e.target.value as string)}
+            >
+              {models ? (
+                models.map((model) => (
+                  <MenuItem value={model}>{model}</MenuItem>
+                ))
+              ) : (
+                <MenuItem value={""}>Loading models...</MenuItem>
+              )}
+            </Select>
+          </FormControl>
+        </div>
       </DialogContent>
 
       <DialogActions>

@@ -16,7 +16,7 @@ export default class MLRootStore extends RootStore {
       mlRootViewStore: observable,
     })
 
-    this.mlTrackStore.addTrack(this, 1)
+    this.mlTrackStore.onTrackAdded(this, 1)
     ;(this.services.player as MLPlayer).mlTrackStore = this.mlTrackStore
   }
 }

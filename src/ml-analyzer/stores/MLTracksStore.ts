@@ -75,7 +75,7 @@ function createTrackAnalyzer(
 }
 
 export default class MLTracksStore {
-  public mlTracks: MLTrackWrapper[] = [{} as unknown as MLTrackWrapper]
+  public mlTracks: Array<MLTrackWrapper | undefined> = [undefined]
   public changeFlag: boolean = false // Very hacky way to forward changes, but probably more optimized than just observing the entire mlTrackMap
 
   constructor() {
@@ -85,27 +85,39 @@ export default class MLTracksStore {
     })
   }
 
-  addTrack(rootStore: MLRootStore, trackId: number) {
-    this.mlTracks.push(createTrackAnalyzer(rootStore, trackId))
-
+  onTrackAdded(rootStore: MLRootStore, trackId: number) {
     rootStore.mlRootViewStore.currentSettingsTrack = trackId
     rootStore.mlRootViewStore.openTrackSettings = true
+  }
+
+  addTrack(rootStore: MLRootStore, trackId: number) {
+    const track = createTrackAnalyzer(rootStore, trackId)
+
+    this.mlTracks.push(track)
+
+    return track
+  }
+
+  addRegularTrack(rootStore: MLRootStore, trackId: number) {
+    this.mlTracks.push(undefined)
   }
 
   insertTrack(rootStore: MLRootStore, trackId: number) {
     const newTrack = createTrackAnalyzer(rootStore, trackId)
 
     this.mlTracks.splice(trackId, 0, newTrack)
+
+    return newTrack
   }
 
   removeTrack(trackId: number) {
     const wrapper = pullAt(this.mlTracks, trackId)[0]
 
-    wrapper.disposer()
+    wrapper?.disposer()
   }
 
   get(id: number): MLTrackWrapper | undefined {
-    return this.mlTracks[id]
+    return id < this.mlTracks.length ? this.mlTracks[id] : undefined
   }
 
   set(id: number, track: MLTrackWrapper) {
@@ -115,25 +127,27 @@ export default class MLTracksStore {
   delete(id: number) {
     const wrapper = pullAt(this.mlTracks, id)[0]
 
-    wrapper.disposer()
+    wrapper?.disposer()
   }
 
   has(id: number) {
-    return id < this.mlTracks.length
+    return id < this.mlTracks.length && this.mlTracks[id] !== undefined
   }
 
   keys() {
     return this.mlTracks
   }
 
-  forEach(callback: (value: MLTrackWrapper) => void) {
+  forEach(callback: (value: MLTrackWrapper | undefined) => void) {
     this.mlTracks.forEach(callback)
   }
 
   getChunks(): Chunk[] {
     const chunks: Chunk[] = []
 
-    const wrappers = this.mlTracks
+    const wrappers = this.mlTracks.filter(function (w): w is MLTrackWrapper {
+      return w !== undefined
+    })
 
     for (let i = 1; i < wrappers.length; i++) {
       chunks.push(...wrappers[i].chunks)

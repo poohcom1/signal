@@ -3,6 +3,7 @@ import { Headset, Layers, VolumeOff, VolumeUp } from "@material-ui/icons"
 import { observer } from "mobx-react-lite"
 import { FC, useCallback, useState } from "react"
 import styled from "styled-components"
+import MLRootStore from "../../../ml-analyzer/stores/MLRootStore"
 import {
   addTrack,
   removeTrack,
@@ -95,6 +96,9 @@ export const TrackListItem: FC<TrackListItemProps> = observer(({ trackId }) => {
   const { onContextMenu, menuProps } = useContextMenu()
   const [isDialogOpened, setDialogOpened] = useState(false)
 
+  // @signal-ml
+  const mlRootStore = rootStore as MLRootStore
+
   const onClickMute: React.MouseEventHandler<HTMLButtonElement> = useCallback(
     (e) => {
       e.stopPropagation()
@@ -146,7 +150,11 @@ export const TrackListItem: FC<TrackListItemProps> = observer(({ trackId }) => {
         <div>
           <div className="label">
             <div className="name">{name}</div>
-            <div className="instrument">{instrument}</div>
+            <div className="instrument">
+              {mlRootStore.mlTrackStore.has(trackId)
+                ? mlRootStore.mlTrackStore.get(trackId)?.model
+                : instrument}
+            </div>
           </div>
           <div className="controls">
             <IconButton

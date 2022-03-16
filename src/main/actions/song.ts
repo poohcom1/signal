@@ -76,7 +76,7 @@ export const addTrack = (rootStore: RootStore) => () => {
   rootStore.song.addTrack(emptyTrack(rootStore.song.tracks.length - 1))
 
   // @signal-ml
-  ;(rootStore as MLRootStore).mlTrackStore.addTrack(
+  ;(rootStore as MLRootStore).mlTrackStore.onTrackAdded(
     rootStore as MLRootStore,
     rootStore.song.tracks.length - 1
   )
@@ -110,7 +110,7 @@ export const insertTrack = (rootStore: RootStore) => (trackId: number) => {
   )
 
   // @signal-ml
-  ;(rootStore as MLRootStore).mlTrackStore.insertTrack(
+  ;(rootStore as MLRootStore).mlTrackStore.onTrackAdded(
     rootStore as MLRootStore,
     trackId
   )
