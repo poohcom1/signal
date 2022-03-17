@@ -72,7 +72,7 @@ export default class Chunk {
   // Methods
   public delayedConvert(
     timebase: number,
-    onUpdate: (state: FetchState) => void = () => {},
+    onUpdate: (state: FetchState) => void = () => { },
     timeout: number = 3000
   ) {
     if (this._convertTimeout) {
@@ -88,7 +88,7 @@ export default class Chunk {
 
   public convertMidiToAudio(
     timebase: number,
-    onUpdate: (state: FetchState) => void = () => {}
+    onUpdate: (state: FetchState) => void = () => { }
   ) {
     if (this.state !== FetchState.Fetching && this.audioSrc === "") {
       this._error = null
@@ -101,7 +101,13 @@ export default class Chunk {
       const { signal } = this._fetchController
 
       convertMidi(bytes, signal)
-        .then((res) => res.blob())
+        .then((res) => {
+          if (res.ok) {
+            return res.blob()
+          } else {
+            throw new Error("Server error")
+          }
+        })
         .then((blob) => {
           this.audioSrc = URL.createObjectURL(blob)
           this._audio.src = this.audioSrc
@@ -114,7 +120,7 @@ export default class Chunk {
           this.state = FetchState.Error
           onUpdate(this.state)
           this._error = error
-          console.log("Error ", this._error)
+          console.error("Error ", this._error)
         })
     }
   }
@@ -188,7 +194,7 @@ export default class Chunk {
     )
   }
 
-  public equal(other: Chunk) {}
+  public equal(other: Chunk) { }
 
   /**
    * Aborts pending fetch and free whatever is required

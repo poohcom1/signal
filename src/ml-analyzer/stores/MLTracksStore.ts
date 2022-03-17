@@ -4,15 +4,6 @@ import Chunk, { FetchState } from "../models/Chunk"
 import MLTrackWrapper from "../models/MLTrackWrapper"
 import MLRootStore from "./MLRootStore"
 
-export interface IMLTracksStore {
-  get: (id: string) => MLTrackWrapper | undefined
-  set: (id: string, track: MLTrackWrapper) => void
-  delete: (id: string) => void
-  keys: () => IterableIterator<string>
-  has: (id: string) => boolean
-  forEach: (callback: (value: MLTrackWrapper, id: string) => void) => void
-}
-
 /**
  * Generate track wrapper
  * @param id Track id
@@ -75,7 +66,9 @@ function createTrackAnalyzer(
 }
 
 export default class MLTracksStore {
-  public mlTracks: Array<MLTrackWrapper | undefined> = [undefined]
+
+  public mlTracks: Array<MLTrackWrapper | undefined> = [undefined] // undefined tracks represent regular tracks
+
   public changeFlag: boolean = false // Very hacky way to forward changes, but probably more optimized than just observing the entire mlTrackMap
 
   constructor() {
@@ -145,12 +138,12 @@ export default class MLTracksStore {
   getChunks(): Chunk[] {
     const chunks: Chunk[] = []
 
-    const wrappers = this.mlTracks.filter(function (w): w is MLTrackWrapper {
-      return w !== undefined
-    })
+    for (let i = 0; i < this.mlTracks.length; i++) {
+      const track = this.mlTracks[i]
 
-    for (let i = 1; i < wrappers.length; i++) {
-      chunks.push(...wrappers[i].chunks)
+      if (track) {
+        chunks.push(...track.chunks)
+      }
     }
 
     return chunks

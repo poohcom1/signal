@@ -16,6 +16,7 @@ export default class MLPlayer extends Player {
 
     if (!this.mlTrackStore) return
 
+
     let allChunks = this.mlTrackStore.getChunks()
 
     for (const chunk of allChunks) {

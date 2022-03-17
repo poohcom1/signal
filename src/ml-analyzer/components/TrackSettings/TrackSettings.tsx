@@ -27,15 +27,14 @@ export const TrackSettings: FC = observer(() => {
   const [models, setModels] = useState<string[]>()
 
   useEffect(() => {
-    getModels()
-      .then((res) => res.json())
-      .then((models: string[]) => {
-        setModels(models)
-        setModel(models[0])
-      })
-      .catch((e) => {
-        alert(e + " Please try again in a couple minutes!")
-      })
+    getModels().then((results) => {
+      if (!results.error) {
+        setModels(results.data)
+        setModel(results.data[0])
+      } else {
+        alert(results.error)
+      }
+    })
   }, [])
 
   // Option data
@@ -109,7 +108,12 @@ export const TrackSettings: FC = observer(() => {
         >
           Cancel
         </Button>
-        <Button onClick={handleCreate}>Create</Button>
+        <Button
+          onClick={handleCreate}
+          disabled={model === "" && !isRegularTrack}
+        >
+          Create
+        </Button>
       </DialogActions>
     </Dialog>
   )

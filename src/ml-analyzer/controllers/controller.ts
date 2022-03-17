@@ -37,6 +37,16 @@ export function convertMidi(
   })
 }
 
-export function getModels(): Promise<Response> {
-  return fetch(`${BACKEND_URL}/models`, { method: "GET" })
+export async function getModels(): Promise<Result<string[]>> {
+  try {
+    const res = await fetch(`${BACKEND_URL}/models`, { method: "GET" })
+
+    const list = await res.json() as string[]
+
+    return { data: list, error: null }
+  } catch (error) {
+    console.log(error)
+
+    return { data: [], error: "Server error! Please try again later" }
+  }
 }
