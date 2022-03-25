@@ -2,8 +2,9 @@ import { clone } from "lodash"
 import { makeObservable, observable } from "mobx"
 import { NoteEvent, TrackEvent } from "../../../src/common/track"
 import { isNoteEvent } from "../../common/track/identify"
+import { convertMidi } from "../adapters/adapter"
 import { eventsToMidi } from "../common/midi/customMidiConversion"
-import { convertMidi } from "../controllers/controller"
+import MLTrack from "./MLTrack"
 
 export enum FetchState {
   UnFetched,
@@ -20,6 +21,7 @@ export default class Chunk {
   public audioSrc: string = ""
   public state: FetchState = FetchState.UnFetched
 
+  private _mlTrack: MLTrack
   private _audio: HTMLAudioElement
   private _velocityCache: number[] = []
   private _convertTimeout: NodeJS.Timeout | null = null
@@ -33,8 +35,11 @@ export default class Chunk {
 
   constructor(
     notes: NoteEvent[],
+    track: MLTrack,
     audio: HTMLAudioElement | undefined = undefined
   ) {
+    this._mlTrack = track
+
     // Conditionally set to allow testing without DOM
     if (audio) {
       this._audio = audio

@@ -1,9 +1,10 @@
 import { IReactionDisposer, makeObservable, observable } from "mobx"
-import Chunk from "../models/Chunk"
+import Chunk from "./Chunk"
 
-export default class MLTrackWrapper {
+export default class MLTrack {
   public disposer: IReactionDisposer
   public chunks: Chunk[] = []
+
   // ML Data
   public model: string = ""
   public modelOptions: Record<string, string | boolean | number> = {}

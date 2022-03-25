@@ -1,7 +1,7 @@
 import { pullAt } from "lodash"
 import { makeObservable, observable, reaction } from "mobx"
 import Chunk, { FetchState } from "../models/Chunk"
-import MLTrackWrapper from "../models/MLTrackWrapper"
+import MLTrack from "../models/MLTrack"
 import MLRootStore from "./MLRootStore"
 
 /**
@@ -14,7 +14,7 @@ function createTrackAnalyzer(
   rootStore: MLRootStore,
   id: number,
   delayMS = 3000
-): MLTrackWrapper {
+): MLTrack {
   const disposer = reaction(
     // Track events
     () => {
@@ -30,24 +30,24 @@ function createTrackAnalyzer(
       }
 
       // Get track wrapper
-      const trackWrapper = rootStore.mlTrackStore.get(id)
+      const mlTrack = rootStore.mlTrackStore.get(id)!
 
       // Generate new chunks
       const noteEventsList = Chunk.splitNotes(events)
       const newChunks = []
 
       for (const noteEvents of noteEventsList) {
-        newChunks.push(new Chunk(noteEvents))
+        newChunks.push(new Chunk(noteEvents, mlTrack))
       }
 
       // Compare and replace old chunks
-      if (trackWrapper) {
-        trackWrapper.chunks = Chunk.replaceChunks(
-          trackWrapper.chunks,
+      if (mlTrack) {
+        mlTrack.chunks = Chunk.replaceChunks(
+          mlTrack.chunks,
           newChunks
         )
 
-        for (const chunk of trackWrapper.chunks) {
+        for (const chunk of mlTrack.chunks) {
           if (chunk.state == FetchState.UnFetched) {
             chunk.delayedConvert(
               rootStore.song.timebase,
@@ -62,12 +62,12 @@ function createTrackAnalyzer(
     }
   )
 
-  return new MLTrackWrapper(disposer)
+  return new MLTrack(disposer)
 }
 
 export default class MLTracksStore {
 
-  public mlTracks: Array<MLTrackWrapper | undefined> = [undefined] // undefined tracks represent regular tracks
+  public mlTracks: Array<MLTrack | undefined> = [undefined] // undefined tracks represent regular tracks
 
   public changeFlag: boolean = false // Very hacky way to forward changes, but probably more optimized than just observing the entire mlTrackMap
 
@@ -109,11 +109,11 @@ export default class MLTracksStore {
     wrapper?.disposer()
   }
 
-  get(id: number): MLTrackWrapper | undefined {
+  get(id: number): MLTrack | undefined {
     return id < this.mlTracks.length ? this.mlTracks[id] : undefined
   }
 
-  set(id: number, track: MLTrackWrapper) {
+  set(id: number, track: MLTrack) {
     this.mlTracks[id] = track
   }
 
@@ -131,7 +131,7 @@ export default class MLTracksStore {
     return this.mlTracks
   }
 
-  forEach(callback: (value: MLTrackWrapper | undefined) => void) {
+  forEach(callback: (value: MLTrack | undefined) => void) {
     this.mlTracks.forEach(callback)
   }
 

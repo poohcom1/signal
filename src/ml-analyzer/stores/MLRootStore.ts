@@ -4,9 +4,12 @@ import MLPlayer from "../models/MLPlayer"
 import MLRootViewStore from "./MLRootViewStore"
 import MLTracksStore from "./MLTracksStore"
 
+export type Configs = Record<string, Record<string, string | number | boolean>>
+
 export default class MLRootStore extends RootStore {
   mlTrackStore = new MLTracksStore()
   mlRootViewStore = new MLRootViewStore()
+  configs: Configs = {}
 
   constructor() {
     super()
@@ -16,7 +19,8 @@ export default class MLRootStore extends RootStore {
       mlRootViewStore: observable,
     })
 
-    this.mlTrackStore.onTrackAdded(this, 1)
-    ;(this.services.player as MLPlayer).mlTrackStore = this.mlTrackStore
+    this.mlTrackStore.onTrackAdded(this, 1);
+
+    (this.services.player as MLPlayer).mlTrackStore = this.mlTrackStore
   }
 }

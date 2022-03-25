@@ -26,7 +26,7 @@ function note(tick: number, duration: number, num: number): NoteEvent {
  */
 function chunk(notes: NoteEvent[]): Chunk {
   // @ts-ignore
-  return new Chunk(notes, {})
+  return new Chunk(notes, null, {})
 }
 
 function simpleChunk(

@@ -15,7 +15,7 @@ import { observer } from "mobx-react-lite"
 import { FC, useCallback, useEffect, useState } from "react"
 import { removeTrack } from "../../../main/actions"
 import { useStores } from "../../../main/hooks/useStores"
-import { getModels } from "../../controllers/controller"
+import { getModels } from "../../adapters/adapter"
 import MLRootStore from "../../stores/MLRootStore"
 
 export const TrackSettings: FC = observer(() => {
@@ -29,8 +29,12 @@ export const TrackSettings: FC = observer(() => {
   useEffect(() => {
     getModels().then((results) => {
       if (!results.error) {
-        setModels(results.data)
-        setModel(results.data[0])
+        const models = Array.from(Object.keys(results.data))
+
+        setModels(models)
+        setModel(models[0])
+
+        rootStore.configs = results.data
       } else {
         alert(results.error)
       }
