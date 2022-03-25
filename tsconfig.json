@@ -1,12 +1,19 @@
 {
   "compilerOptions": {
-    "types": ["node", "jest", "webpack-env", "webmidi"],
-    "baseUrl": ".",
+    "types": [
+      "node",
+      "jest",
+      "webpack-env",
+      "webmidi",
+      "wicg-file-system-access"
+    ],
+    "baseUrl": "./src",
     "sourceMap": true,
-    "target": "es5",
+    "target": "esnext",
     "module": "esnext",
     "esModuleInterop": true,
     "jsx": "react-jsx",
+    "jsxImportSource": "@emotion/react",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": true,
@@ -17,5 +24,5 @@
     "resolveJsonModule": true,
     "strict": true
   },
-  "exclude": ["node_modules", "src/submodules", "**/*.test.ts"]
+  "include": ["src/**/*"]
 }

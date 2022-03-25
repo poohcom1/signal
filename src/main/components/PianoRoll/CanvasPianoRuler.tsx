@@ -1,12 +1,12 @@
 import { findLast, isEqual } from "lodash"
 import { observer } from "mobx-react-lite"
-import React, { FC, useCallback, useState } from "react"
+import React, { FC, MouseEventHandler, useCallback, useState } from "react"
 import { BeatWithX } from "../../../common/helpers/mapBeats"
 import { LoopSetting } from "../../../common/player"
 import { Theme } from "../../../common/theme/Theme"
 import Chunk, { FetchState } from "../../../ml-analyzer/models/Chunk"
 import MLRootStore from "../../../ml-analyzer/stores/MLRootStore"
-import { setPlayerPosition, updateTimeSignature } from "../../actions"
+import { setLoopBegin, setLoopEnd, updateTimeSignature } from "../../actions"
 import { Layout } from "../../Constants"
 import { useContextMenu } from "../../hooks/useContextMenu"
 import { useStores } from "../../hooks/useStores"
@@ -66,9 +66,10 @@ function drawLoopPoints(
   pixelsPerTick: number,
   theme: Theme
 ) {
-  const lineWidth = 1
   const flagSize = 8
+  ctx.lineWidth = 1
   ctx.fillStyle = loop.enabled ? theme.themeColor : theme.secondaryTextColor
+  ctx.strokeStyle = loop.enabled ? theme.themeColor : theme.secondaryTextColor
   ctx.beginPath()
 
   const beginX = loop.begin * pixelsPerTick
@@ -77,25 +78,26 @@ function drawLoopPoints(
   if (loop.begin !== null) {
     const x = beginX
     ctx.moveTo(x, 0)
-    ctx.lineTo(x + lineWidth + flagSize, 0)
-    ctx.lineTo(x + lineWidth, flagSize)
-    ctx.lineTo(x + lineWidth, height)
     ctx.lineTo(x, height)
-    ctx.lineTo(x, 0)
+
+    ctx.moveTo(x, 0)
+    ctx.lineTo(x + flagSize, 0)
+    ctx.lineTo(x, flagSize)
   }
 
   if (loop.end !== null) {
     const x = endX
     ctx.moveTo(x, 0)
-    ctx.lineTo(x - lineWidth - flagSize, 0)
-    ctx.lineTo(x - lineWidth, flagSize)
-    ctx.lineTo(x - lineWidth, height)
     ctx.lineTo(x, height)
-    ctx.lineTo(x, 0)
+
+    ctx.moveTo(x, 0)
+    ctx.lineTo(x - flagSize, 0)
+    ctx.lineTo(x, flagSize)
   }
 
   ctx.closePath()
   ctx.fill()
+  ctx.stroke()
 
   if (loop.begin !== null && loop.end !== null) {
     ctx.rect(beginX, 0, endX - beginX, height)
@@ -169,7 +171,7 @@ function drawTimeSignatures(
       size.actualBoundingBoxAscent + size.actualBoundingBoxDescent
     ctx.fillStyle = e.isSelected
       ? theme.themeColor
-      : theme.tertiaryBackgroundColor
+      : theme.secondaryBackgroundColor
     drawFlag(
       ctx,
       x,
@@ -207,6 +209,7 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
   const { onContextMenu, menuProps } = useContextMenu()
   const [timeSignatureDialogState, setTimeSignatureDialogState] =
     useState<TimeSignatureDialogState | null>(null)
+  const [rightClickTick, setRightClickTick] = useState(0)
   const height = Layout.rulerHeight
 
   const {
@@ -214,8 +217,13 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
     transform: { pixelsPerTick },
     scrollLeft,
   } = rulerStore.parent
-  const { beats, timeSignatures } = rulerStore
-  const { loop } = rootStore.services.player
+  const { beats, timeSignatures, quantizer } = rulerStore
+  const {
+    services: {
+      player,
+      player: { loop },
+    },
+  } = rootStore
 
   const timeSignatureHitTest = (tick: number) => {
     const widthTick = TIME_SIGNATURE_HIT_WIDTH / pixelsPerTick
@@ -227,17 +235,14 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
 
   const onMouseDown: React.MouseEventHandler<HTMLCanvasElement> = useCallback(
     (e) => {
-      const local = {
-        x: e.nativeEvent.offsetX,
-        y: e.nativeEvent.offsetY,
-      }
-      const tick = (local.x + scrollLeft) / pixelsPerTick
+      const tick = rulerStore.getTick(e.nativeEvent.offsetX)
+      const quantizedTick = quantizer.round(tick)
       const timeSignature = timeSignatureHitTest(tick)
 
       if (e.nativeEvent.ctrlKey) {
-        // setLoopBegin(tick)
+        setLoopBegin(rootStore)(quantizedTick)
       } else if (e.nativeEvent.altKey) {
-        // setLoopEnd(tick)
+        setLoopEnd(rootStore)(quantizedTick)
       } else {
         if (timeSignature !== undefined) {
           if (e.detail == 2) {
@@ -247,11 +252,11 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
           }
         } else {
           rulerStore.selectedTimeSignatureEventIds = []
-          setPlayerPosition(rootStore)(tick)
+          player.position = quantizedTick
         }
       }
     },
-    [rootStore, scrollLeft, pixelsPerTick, timeSignatures]
+    [rootStore, quantizer, player, scrollLeft, pixelsPerTick, timeSignatures]
   )
 
   // @signal-ml
@@ -263,7 +268,7 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
       ctx.save()
       ctx.translate(-scrollLeft + 0.5, 0)
       drawRuler(ctx, height, beats, theme)
-      if (loop.enabled) {
+      if (loop !== null) {
         drawLoopPoints(ctx, loop, height, pixelsPerTick, theme)
       }
       drawTimeSignatures(ctx, height, timeSignatures, pixelsPerTick, theme)
@@ -293,6 +298,7 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
       scrollLeft,
       beats,
       timeSignatures,
+      loop,
       // @signal-ml
       song.selectedTrack?.events.length, // on new note
       song.tracks.length, // on new track
@@ -315,6 +321,14 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
     []
   )
 
+  const onContextMenuWrapper: MouseEventHandler = useCallback(
+    (e) => {
+      setRightClickTick(rulerStore.getQuantizedTick(e.nativeEvent.offsetX))
+      onContextMenu(e)
+    },
+    [rulerStore]
+  )
+
   return (
     <>
       <DrawCanvas
@@ -322,11 +336,14 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
         width={width}
         height={height}
         onMouseDown={onMouseDown}
-        onContextMenu={onContextMenu}
+        onContextMenu={onContextMenuWrapper}
         style={style}
       />
-
-      <RulerContextMenu {...menuProps} rulerStore={rulerStore} />
+      <RulerContextMenu
+        {...menuProps}
+        rulerStore={rulerStore}
+        tick={rightClickTick}
+      />
       <TimeSignatureDialog
         open={timeSignatureDialogState != null}
         initialNumerator={timeSignatureDialogState?.numerator}

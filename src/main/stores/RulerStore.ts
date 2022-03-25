@@ -1,6 +1,10 @@
 import { computed, makeObservable, observable } from "mobx"
-import { filterEventsWithScroll } from "../../common/helpers/filterEventsWithScroll"
-import { BeatWithX, createBeatsInRange } from "../../common/helpers/mapBeats"
+import { filterEventsWithScroll } from "../../common/helpers/filterEvents"
+import {
+  BeatWithX,
+  createBeatsWithXInRange,
+} from "../../common/helpers/mapBeats"
+import Quantizer from "../../common/quantizer"
 import Song from "../../common/song"
 import { isTimeSignatureEvent } from "../../common/track"
 
@@ -13,6 +17,7 @@ interface RulerProvider {
   transform: CoordTransform
   scrollLeft: number
   canvasWidth: number
+  quantizer: Quantizer
 }
 
 export interface TimeSignature {
@@ -34,6 +39,7 @@ export class RulerStore {
       selectedTimeSignatureEventIds: observable.shallow,
       beats: computed,
       timeSignatures: computed,
+      quantizer: computed,
     })
   }
 
@@ -42,7 +48,7 @@ export class RulerStore {
 
     const startTick = scrollLeft / transform.pixelsPerTick
 
-    return createBeatsInRange(
+    return createBeatsWithXInRange(
       rootStore.song.measures,
       transform.pixelsPerTick,
       rootStore.song.timebase,
@@ -70,5 +76,20 @@ export class RulerStore {
         ...e,
         isSelected: selectedTimeSignatureEventIds.includes(e.id),
       }))
+  }
+
+  get quantizer(): Quantizer {
+    return this.parent.quantizer
+  }
+
+  getTick(offsetX: number) {
+    const { transform, scrollLeft } = this.parent
+    const tick = (offsetX + scrollLeft) / transform.pixelsPerTick
+    return tick
+  }
+
+  getQuantizedTick(offsetX: number) {
+    const { quantizer } = this.parent
+    return quantizer.round(this.getTick(offsetX))
   }
 }

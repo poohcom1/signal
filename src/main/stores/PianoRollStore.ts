@@ -4,7 +4,7 @@ import { ControllerEvent, MIDIControlEvents, PitchBendEvent } from "midifile-ts"
 import { action, autorun, computed, makeObservable, observable } from "mobx"
 import { containsPoint, IPoint, IRect } from "../../common/geometry"
 import { isNotUndefined } from "../../common/helpers/array"
-import { filterEventsWithScroll } from "../../common/helpers/filterEventsWithScroll"
+import { filterEventsOverlapScroll } from "../../common/helpers/filterEvents"
 import { getMBTString } from "../../common/measure/mbt"
 import Quantizer from "../../common/quantizer"
 import { ControlSelection } from "../../common/selection/ControlSelection"
@@ -241,7 +241,7 @@ export default class PianoRollStore {
       return []
     }
 
-    return filterEventsWithScroll(
+    return filterEventsOverlapScroll(
       track.events,
       transform.pixelsPerTick,
       scrollLeft,
@@ -290,7 +290,7 @@ export default class PianoRollStore {
         ) {
           return []
         }
-        return filterEventsWithScroll(
+        return filterEventsOverlapScroll(
           track.events.filter(isNoteEvent),
           transform.pixelsPerTick,
           scrollLeft,
@@ -384,27 +384,21 @@ export default class PianoRollStore {
     )
   }
 
-  get currentVolume(): number {
-    return (
-      this.rootStore.song.selectedTrack?.getVolume(
-        this.rootStore.services.player.position
-      ) ?? 0
+  get currentVolume(): number | undefined {
+    return this.rootStore.song.selectedTrack?.getVolume(
+      this.rootStore.services.player.position
     )
   }
 
-  get currentPan(): number {
-    return (
-      this.rootStore.song.selectedTrack?.getPan(
-        this.rootStore.services.player.position
-      ) ?? 0
+  get currentPan(): number | undefined {
+    return this.rootStore.song.selectedTrack?.getPan(
+      this.rootStore.services.player.position
     )
   }
 
-  get currentTempo(): number {
-    return (
-      this.rootStore.song.conductorTrack?.getTempo(
-        this.rootStore.services.player.position
-      ) ?? 1
+  get currentTempo(): number | undefined {
+    return this.rootStore.song.conductorTrack?.getTempo(
+      this.rootStore.services.player.position
     )
   }
 

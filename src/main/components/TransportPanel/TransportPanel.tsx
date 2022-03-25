@@ -1,30 +1,37 @@
-import { CircularProgress, makeStyles, Toolbar } from "@material-ui/core"
+import styled from "@emotion/styled"
 import {
   FastForward,
   FastRewind,
   FiberManualRecord,
+  Loop,
   Pause,
   PlayArrow,
   Stop,
-} from "@material-ui/icons"
+} from "@mui/icons-material"
+import { CircularProgress, Tooltip } from "@mui/material"
+import MetronomeIcon from "mdi-react/MetronomeIcon"
 import { observer } from "mobx-react-lite"
-import { FC } from "react"
-import styled from "styled-components"
-import { fastForwardOneBar, play, rewindOneBar, stop } from "../../actions"
+import { FC, useCallback } from "react"
+import { localized } from "../../../common/localize/localizedString"
+import { DEFAULT_TEMPO } from "../../../common/player"
+import {
+  fastForwardOneBar,
+  playOrPause,
+  rewindOneBar,
+  stop,
+  toggleEnableLoop,
+} from "../../actions"
 import { toggleRecording } from "../../actions/recording"
 import { useStores } from "../../hooks/useStores"
 
-const useStyles = makeStyles((theme) => ({
-  toolbar: {
-    justifyContent: "center",
-    background: "var(--background-color)",
-    borderTop: "1px solid var(--divider-color)",
-  },
-  loop: {
-    marginLeft: "1rem",
-    height: "2rem",
-  },
-}))
+const Toolbar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 1rem;
+  background: ${({ theme }) => theme.backgroundColor};
+  border-top: 1px solid ${({ theme }) => theme.dividerColor};
+`
 
 const TempoInput = styled.input`
   background: transparent;
@@ -53,7 +60,7 @@ const Button = styled.div`
   border-radius: 100%;
   margin: 0.25rem;
   padding: 0.4rem;
-  color: var(--text-color);
+  color: ${({ theme }) => theme.textColor};
   display: flex;
   cursor: pointer;
 
@@ -62,26 +69,39 @@ const Button = styled.div`
   }
 
   svg {
-    font-size: 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
   }
 `
 
 const PlayButton = styled(Button)`
-  background: var(--theme-color);
+  background: ${({ theme }) => theme.themeColor};
 
   &:hover {
-    background: var(--theme-color);
+    background: ${({ theme }) => theme.themeColor};
     opacity: 0.8;
   }
 
   &.active {
-    background: var(--theme-color);
+    background: ${({ theme }) => theme.themeColor};
   }
 `
 
 const RecordButton = styled(Button)`
   &.active {
     color: ${({ theme }) => theme.recordColor};
+  }
+`
+
+const LoopButton = styled(Button)`
+  &.active {
+    color: ${({ theme }) => theme.themeColor};
+  }
+`
+
+const MetronomeButton = styled(Button)`
+  &.active {
+    color: ${({ theme }) => theme.themeColor};
   }
 `
 
@@ -94,18 +114,18 @@ const TempoWrapper = styled.div`
 
   label {
     font-size: 0.6rem;
-    color: var(--secondary-text-color);
+    color: ${({ theme }) => theme.secondaryTextColor};
   }
 
   &:focus-within {
-    border: 1px solid var(--divider-color);
+    border: 1px solid ${({ theme }) => theme.dividerColor};
     background: #ffffff14;
   }
 `
 
 const TempoForm: FC = observer(() => {
   const rootStore = useStores()
-  const tempo = rootStore.pianoRollStore.currentTempo
+  const tempo = rootStore.pianoRollStore.currentTempo ?? DEFAULT_TEMPO
 
   const changeTempo = (tempo: number) => {
     const fixedTempo = Math.max(1, Math.min(512, tempo))
@@ -146,7 +166,7 @@ const TempoForm: FC = observer(() => {
 const TimestampText = styled.div`
   font-family: "Roboto Mono", monospace;
   font-size: 0.9rem;
-  color: var(--secondary-text-color);
+  color: ${({ theme }) => theme.secondaryTextColor};
 `
 
 const Timestamp: FC = observer(() => {
@@ -156,7 +176,7 @@ const Timestamp: FC = observer(() => {
 })
 
 export const ToolbarSeparator = styled.div`
-  background: var(--divider-color);
+  background: ${({ theme }) => theme.dividerColor};
   margin: 0.4em 1em;
   width: 1px;
   height: 1rem;
@@ -169,52 +189,91 @@ export const Right = styled.div`
 
 export const TransportPanel: FC = observer(() => {
   const rootStore = useStores()
+  const {
+    services: { player },
+  } = rootStore
 
-  const isPlaying = rootStore.services.player.isPlaying
+  const { isPlaying, isMetronomeEnabled, loop } = player
   const isRecording = rootStore.services.midiRecorder.isRecording
   const canRecording =
     Object.values(rootStore.midiDeviceStore.enabledInputs).filter((e) => e)
       .length > 0
   const isSynthLoading = rootStore.services.synth.isLoading
 
-  const onClickPlay = play(rootStore)
+  const onClickPlay = playOrPause(rootStore)
   const onClickStop = stop(rootStore)
   const onClickBackward = rewindOneBar(rootStore)
   const onClickForward = fastForwardOneBar(rootStore)
   const onClickRecord = toggleRecording(rootStore)
+  const onClickEnableLoop = toggleEnableLoop(rootStore)
+  const onClickMetronone = useCallback(() => {
+    player.isMetronomeEnabled = !player.isMetronomeEnabled
+  }, [player])
 
-  const classes = useStyles({})
   return (
-    <Toolbar variant="dense" className={classes.toolbar}>
-      <Button onClick={onClickBackward}>
-        <FastRewind />
-      </Button>
-      <Button onClick={onClickStop}>
-        <Stop />
-      </Button>
+    <Toolbar>
+      <Tooltip title={`${localized("rewind", "Rewind")}`} placement="top">
+        <Button onClick={onClickBackward}>
+          <FastRewind />
+        </Button>
+      </Tooltip>
 
-      <PlayButton
-        id="button-play"
-        onClick={onClickPlay}
-        className={isPlaying ? "active" : undefined}
+      <Tooltip title={`${localized("stop", "Stop")}`} placement="top">
+        <Button onClick={onClickStop}>
+          <Stop />
+        </Button>
+      </Tooltip>
+
+      <Tooltip
+        title={`${localized("play-pause", "Play/Pause")} [space]`}
+        placement="top"
       >
-        {isPlaying ? <Pause /> : <PlayArrow />}
-      </PlayButton>
+        <PlayButton
+          id="button-play"
+          onClick={onClickPlay}
+          className={isPlaying ? "active" : undefined}
+        >
+          {isPlaying ? <Pause /> : <PlayArrow />}
+        </PlayButton>
+      </Tooltip>
 
       {canRecording && (
-        <RecordButton
-          onClick={onClickRecord}
-          className={isRecording ? "active" : undefined}
-        >
-          <FiberManualRecord />
-        </RecordButton>
+        <Tooltip title={`${localized("record", "Record")}`} placement="top">
+          <RecordButton
+            onClick={onClickRecord}
+            className={isRecording ? "active" : undefined}
+          >
+            <FiberManualRecord />
+          </RecordButton>
+        </Tooltip>
       )}
 
-      <Button onClick={onClickForward}>
-        <FastForward />
-      </Button>
+      <Tooltip
+        title={`${localized("fast-forward", "Fast Forward")}`}
+        placement="top"
+      >
+        <Button onClick={onClickForward}>
+          <FastForward />
+        </Button>
+      </Tooltip>
+
+      {loop && (
+        <LoopButton
+          onClick={onClickEnableLoop}
+          className={loop.enabled ? "active" : undefined}
+        >
+          <Loop />
+        </LoopButton>
+      )}
 
       <ToolbarSeparator />
+
+      <MetronomeButton
+        onClick={onClickMetronone}
+        className={isMetronomeEnabled ? "active" : undefined}
+      >
+        <MetronomeIcon />
+      </MetronomeButton>
 
       <TempoForm />
 

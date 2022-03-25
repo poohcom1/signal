@@ -1,36 +1,19 @@
-import { makeStyles } from "@material-ui/core"
-import { Create } from "@material-ui/icons"
-import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab"
-import { useCallback, VFC } from "react"
-import styled from "styled-components"
-import SelectIcon from "../../images/select.svg"
+import styled from "@emotion/styled"
+import { Create } from "@mui/icons-material"
+import { Tooltip } from "@mui/material"
+import React, { useCallback, VFC } from "react"
+import { localized } from "../../../common/localize/localizedString"
 import { PianoRollMouseMode } from "../../stores/PianoRollStore"
+import { SelectionToolIcon } from "./SelectionToolIcon"
+import {
+  ToolbarButtonGroup,
+  ToolbarButtonGroupItem,
+} from "./ToolbarButtonGroup"
 
-const useStyles = makeStyles((theme) => ({
-  toggleButtonGroup: {
-    backgroundColor: "transparent",
-    marginRight: "1rem",
-  },
-}))
-
-const SelectionToolIcon = styled(SelectIcon)`
-  width: 1rem;
-  fill: currentColor;
+const ButtonGroup = styled(ToolbarButtonGroup)`
+  background-color: transparent;
+  margin-right: 1rem;
 `
-
-export const StyledToggleButton = styled(ToggleButton)`
-  height: 2rem;
-  color: var(--text-color);
-  font-size: 1rem;
-  padding: 0 0.7rem;
-  &.Mui-selected {
-    background: var(--theme-color);
-  }
-`
-
-StyledToggleButton.defaultProps = {
-  value: "",
-}
 
 export interface ToolSelectorProps {
   mouseMode: PianoRollMouseMode
@@ -41,22 +24,24 @@ export const ToolSelector: VFC<ToolSelectorProps> = ({
   mouseMode,
   onSelect,
 }) => {
-  const classes = useStyles({})
-
   return (
-    <ToggleButtonGroup value={mouseMode} className={classes.toggleButtonGroup}>
-      <StyledToggleButton
+    <ButtonGroup>
+      <ToolbarButtonGroupItem
         onClick={useCallback(() => onSelect("pencil"), [])}
-        value="pencil"
+        selected={mouseMode === "pencil"}
       >
-        <Create style={{ width: "1rem" }} />
-      </StyledToggleButton>
-      <StyledToggleButton
+        <Tooltip title={`${localized("pencil-tool", "Pencil Tool")} [1]`}>
+          <Create style={{ width: "1rem" }} />
+        </Tooltip>
+      </ToolbarButtonGroupItem>
+      <ToolbarButtonGroupItem
         onClick={useCallback(() => onSelect("selection"), [])}
-        value="selection"
+        selected={mouseMode === "selection"}
       >
-        <SelectionToolIcon viewBox="0 0 24 24" />
-      </StyledToggleButton>
-    </ToggleButtonGroup>
+        <Tooltip title={`${localized("selection-tool", "Selection Tool")} [2]`}>
+          <SelectionToolIcon style={{ width: "1rem" }} />
+        </Tooltip>
+      </ToolbarButtonGroupItem>
+    </ButtonGroup>
   )
 }

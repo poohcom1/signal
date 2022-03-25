@@ -1,9 +1,8 @@
-import { IconButton, ListItem } from "@material-ui/core"
-import { Headset, Layers, VolumeOff, VolumeUp } from "@material-ui/icons"
+import styled from "@emotion/styled"
+import { Headset, Layers, VolumeOff, VolumeUp } from "@mui/icons-material"
+import { IconButton } from "@mui/material"
 import { observer } from "mobx-react-lite"
 import { FC, useCallback, useState } from "react"
-import styled from "styled-components"
-import MLRootStore from "../../../ml-analyzer/stores/MLRootStore"
 import {
   addTrack,
   removeTrack,
@@ -22,15 +21,13 @@ export type TrackListItemProps = {
   trackId: number
 }
 
-const Container = styled(ListItem)`
-  &.Mui-selected {
-    background-color: rgb(255 255 255 / 5%);
-    border-right: 5px solid var(--theme-color);
-
-    .name {
-      font-weight: 600;
-    }
-  }
+const Container = styled.div<{ selected: boolean }>`
+  background-color: ${({ selected }) =>
+    selected ? "rgba(255, 255, 255, 5%)" : "transparent"};
+  border-right: 5px solid;
+  border-right-color: ${({ theme, selected }) =>
+    selected ? theme.themeColor : "transparent"};
+  padding: 0.5rem 1rem;
 
   .controls {
     display: flex;
@@ -44,6 +41,7 @@ const Container = styled(ListItem)`
   }
 
   .name {
+    font-weight: ${({ selected }) => (selected ? 600 : "inherit")};
     padding-right: 0.5em;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -59,24 +57,29 @@ const Container = styled(ListItem)`
 
   .button {
     margin-right: 0.5em;
-    color: var(--secondary-text-color);
+    color: ${({ theme }) => theme.secondaryTextColor};
   }
 
   .button.active {
-    color: var(--text-color);
+    color: ${({ theme }) => theme.textColor};
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 5%);
   }
 `
 
 const ChannelName = styled.div`
-  color: var(--secondary-text-color);
+  color: ${({ theme }) => theme.secondaryTextColor};
   font-size: 0.7rem;
   display: flex;
   align-items: center;
-  border: 1px solid var(--divider-color);
+  border: 1px solid ${({ theme }) => theme.dividerColor};
   padding: 0 0.3rem;
+  cursor: pointer;
 
   &:hover {
-    background: var(--secondary-background-color);
+    background: ${({ theme }) => theme.secondaryBackgroundColor};
   }
 `
 
@@ -141,7 +144,6 @@ export const TrackListItem: FC<TrackListItemProps> = observer(({ trackId }) => {
   return (
     <>
       <Container
-        button
         selected={selected}
         onClick={onSelectTrack}
         onContextMenu={onContextMenu}

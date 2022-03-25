@@ -1,3 +1,4 @@
+import styled from "@emotion/styled"
 import {
   Button,
   Checkbox,
@@ -5,17 +6,16 @@ import {
   DialogActions,
   DialogContent,
   FormControlLabel,
-} from "@material-ui/core"
+} from "@mui/material"
+import { map } from "lodash"
 import difference from "lodash/difference"
 import groupBy from "lodash/groupBy"
-import map from "lodash/map"
 import range from "lodash/range"
 import { observer } from "mobx-react-lite"
 import { FC } from "react"
-import styled from "styled-components"
 import { isNotUndefined } from "../../../common/helpers/array"
 import { localized } from "../../../common/localize/localizedString"
-import { getGMCategory, getInstrumentName } from "../../../common/midi/GM"
+import { fancyCategoryNames, getInstrumentName } from "../../../common/midi/GM"
 import { programChangeMidiEvent } from "../../../common/midi/MidiEvent"
 import { setTrackInstrument as setTrackInstrumentAction } from "../../actions"
 import { useStores } from "../../hooks/useStores"
@@ -58,35 +58,38 @@ const Finder = styled.div`
     display: block;
   }
 
-  select {
-    overflow: auto;
-    background-color: #00000024;
-    border: 1px solid var(--divider-color);
-  }
-
-  option:checked {
-    box-shadow: none;
-  }
-
-  select:focus option:checked {
-    box-shadow: 0 0 10px 100px var(--theme-color) inset;
-  }
-
-  select:focus {
-    outline: var(--theme-color) 1px solid;
-  }
-
   .left select {
-    width: 17em;
-  }
-  .right select {
-    width: 17em;
+    width: 15em;
   }
 
-  option {
-    padding: 0.5em 1em;
-    font-size: 0.9rem;
-    color: var(--text-color);
+  .right select {
+    width: 21em;
+  }
+`
+
+const Select = styled.select`
+  overflow: auto;
+  background-color: #00000024;
+  border: 1px solid ${({ theme }) => theme.dividerColor};
+
+  &:focus {
+    outline: ${({ theme }) => theme.themeColor} 1px solid;
+
+    option:checked {
+      box-shadow: 0 0 10px 100px ${({ theme }) => theme.themeColor} inset;
+    }
+  }
+`
+
+const Option = styled.option`
+  padding: 0.5em 1em;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.textColor};
+  height: 1.2rem;
+
+  &:checked {
+    background: ${({ theme }) => theme.themeColor};
+    box-shadow: none;
   }
 `
 
@@ -126,18 +129,18 @@ const InstrumentBrowser: FC<InstrumentBrowserProps> = ({
   const categoryOptions = presetCategories.map(
     (preset: PresetCategory, i: number) => {
       return (
-        <option key={i} value={i}>
+        <Option key={i} value={i}>
           {preset.name}
-        </option>
+        </Option>
       )
     }
   )
 
   const instrumentOptions = instruments.map((p: PresetItem, i: number) => {
     return (
-      <option key={i} value={p.programNumber}>
+      <Option key={i} value={p.programNumber}>
         {p.name}
-      </option>
+      </Option>
     )
   })
 
@@ -147,23 +150,23 @@ const InstrumentBrowser: FC<InstrumentBrowserProps> = ({
         <Finder className={isRhythmTrack ? "disabled" : ""}>
           <div className="left">
             <label>{localized("categories", "Categories")}</label>
-            <select
+            <Select
               size={12}
               onChange={onChangeCategory}
               value={selectedCategoryId}
             >
               {categoryOptions}
-            </select>
+            </Select>
           </div>
           <div className="right">
             <label>{localized("instruments", "Instruments")}</label>
-            <select
+            <Select
               size={12}
               onChange={onChangeInstrument}
               value={programNumber}
             >
               {instrumentOptions}
-            </select>
+            </Select>
           </div>
         </Finder>
         <div className="footer">
@@ -215,8 +218,8 @@ const InstrumentBrowserWrapper: FC = observer(() => {
   }))
 
   const presetCategories = map(
-    groupBy(presets, (p) => getGMCategory(p.programNumber)),
-    (presets, name) => ({ name, presets })
+    groupBy(presets, (p) => Math.floor(p.programNumber / 8)),
+    (presets, index) => ({ name: fancyCategoryNames[parseInt(index)], presets })
   )
 
   const onChange = (setting: InstrumentSetting) => {

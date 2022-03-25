@@ -1,17 +1,13 @@
-import { withStyles } from "@material-ui/core"
-import Slider from "@material-ui/core/Slider"
+import styled from "@emotion/styled"
+import Slider from "@mui/material/Slider"
 import { observer } from "mobx-react-lite"
 import React, { FC, useCallback } from "react"
-import styled from "styled-components"
-import { theme } from "../../../common/theme/muiTheme"
 import { setTrackPan } from "../../actions"
 import { useStores } from "../../hooks/useStores"
 
-const LightSlider = withStyles({
-  root: {
-    color: theme.palette.primary.contrastText,
-  },
-})(Slider)
+const LightSlider = styled(Slider)`
+  color: ${({ theme }) => theme.textColor};
+`
 
 const Container = styled.div`
   display: flex;
@@ -24,12 +20,14 @@ const Label = styled.div`
   display: flex;
   align-items: center;
   margin-right: 1rem;
-  color: var(--secondary-text-color);
+  color: ${({ theme }) => theme.secondaryTextColor};
 `
 
 export interface PanSliderProps {
   trackId: number
 }
+
+const PAN_CENTER = 64
 
 const _PanSlider: FC<PanSliderProps> = observer(({ trackId }) => {
   const rootStore = useStores()
@@ -37,18 +35,19 @@ const _PanSlider: FC<PanSliderProps> = observer(({ trackId }) => {
     (value: number) => setTrackPan(rootStore)(trackId, value),
     [rootStore, trackId]
   )
-  const pan = rootStore.pianoRollStore.currentPan
+  const pan = rootStore.pianoRollStore.currentPan ?? PAN_CENTER
 
   return (
     <Container>
       <Label>Pan</Label>
       <LightSlider
+        size="small"
         value={pan}
         onChange={(_, value) => onChange(value as number)}
         min={0}
         max={127}
-        defaultValue={64}
-        marks={[{ value: 64 }]}
+        defaultValue={PAN_CENTER}
+        marks={[{ value: PAN_CENTER }]}
       />
     </Container>
   )

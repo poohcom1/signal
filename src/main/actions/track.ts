@@ -193,7 +193,7 @@ export const createNote =
       ? quantizer.round(tick)
       : quantizer.floor(tick)
 
-    const note = <Omit<NoteEvent, "id">>{
+    const note: Omit<NoteEvent, "id"> = {
       type: "channel",
       subtype: "note",
       noteNumber: noteNumber,
@@ -203,12 +203,24 @@ export const createNote =
     }
     const added = selectedTrack.addEvent(note)
 
-    player.playNote({
+    player.startNote({
       ...note,
       channel: selectedTrack.channel,
     })
     return added
   }
+
+export const muteNote = (rootStore: RootStore) => (noteNumber: number) => {
+  const {
+    song,
+    services: { player },
+  } = rootStore
+  const selectedTrack = song.selectedTrack
+  if (selectedTrack === undefined || selectedTrack.channel == undefined) {
+    return
+  }
+  player.stopNote({ channel: selectedTrack.channel, noteNumber })
+}
 
 export type MoveNote = {
   id: number
@@ -240,7 +252,8 @@ export const moveNote = (rootStore: RootStore) => (params: MoveNote) => {
     })
 
     if (pitchChanged) {
-      player.playNote({
+      muteNote(rootStore)(note.noteNumber)
+      player.startNote({
         ...note,
         noteNumber: params.noteNumber,
         channel: selectedTrack.channel,

@@ -1,19 +1,15 @@
-import { withStyles } from "@material-ui/core"
-import Slider from "@material-ui/core/Slider"
-import { VolumeUp } from "@material-ui/icons"
+import styled from "@emotion/styled"
+import { VolumeUp } from "@mui/icons-material"
+import Slider from "@mui/material/Slider"
 import { observer } from "mobx-react-lite"
 import React, { FC, useCallback } from "react"
-import styled from "styled-components"
-import { theme } from "../../../common/theme/muiTheme"
 import { setTrackVolume } from "../../actions"
 import { useStores } from "../../hooks/useStores"
 
-const LightSlider = withStyles({
-  root: {
-    color: theme.palette.primary.contrastText,
-    marginLeft: "1rem",
-  },
-})(Slider)
+const LightSlider = styled(Slider)`
+  color: ${({ theme }) => theme.textColor};
+  margin-left: 1rem;
+`
 
 const Container = styled.div`
   display: flex;
@@ -24,7 +20,7 @@ const Container = styled.div`
 `
 
 const VolumeIcon = styled(VolumeUp)`
-  color: var(--secondary-text-color);
+  color: ${({ theme }) => theme.secondaryTextColor};
 `
 
 export interface VolumeSliderProps {
@@ -33,7 +29,7 @@ export interface VolumeSliderProps {
 
 const _VolumeSlider: FC<VolumeSliderProps> = observer(({ trackId }) => {
   const rootStore = useStores()
-  const volume = rootStore.pianoRollStore.currentVolume
+  const volume = rootStore.pianoRollStore.currentVolume ?? 100
   const onChange = useCallback(
     (value: number) => setTrackVolume(rootStore)(trackId, value),
     [rootStore, trackId]
@@ -42,6 +38,7 @@ const _VolumeSlider: FC<VolumeSliderProps> = observer(({ trackId }) => {
     <Container>
       <VolumeIcon />
       <LightSlider
+        size="small"
         value={volume}
         onChange={(_, value) => onChange(value as number)}
         max={127}

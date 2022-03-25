@@ -1,6 +1,6 @@
+import styled from "@emotion/styled"
 import { observer } from "mobx-react-lite"
-import { FC } from "react"
-import styled from "styled-components"
+import React, { FC } from "react"
 import { TrackSettings } from "../../../ml-analyzer/components/TrackSettings/TrackSettings"
 import { useStores } from "../../hooks/useStores"
 import { ArrangeEditor } from "../ArrangeView/ArrangeEditor"

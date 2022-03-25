@@ -1,30 +1,21 @@
-import { Button } from "@material-ui/core"
-import { FiberManualRecord, MusicNote } from "@material-ui/icons"
-import { ToggleButton } from "@material-ui/lab"
+import styled from "@emotion/styled"
+import { FiberManualRecord, MusicNote } from "@mui/icons-material"
+import { Tooltip } from "@mui/material"
 import React from "react"
-import styled from "styled-components"
+import { localized } from "../../../../common/localize/localizedString"
+import {
+  ToolbarButtonGroup,
+  ToolbarButtonGroupItem,
+} from "../ToolbarButtonGroup"
 import { QuantizePopup } from "./QuantizePopup"
 
-const Container = styled.div`
-  display: flex;
-  color: var(--secondary-text-color);
-  position: relative;
+const Container = styled(ToolbarButtonGroup)`
   margin-right: 1em;
-  height: 2rem;
   align-items: stretch;
-  border-radius: 4px;
 `
 
-const Switch = styled(ToggleButton)`
-  min-width: 0;
-  padding: 0.5rem;
-  border-radius: 4px 0 0 4px;
-  border: 1px solid var(--divider-color);
-
-  &.Mui-selected {
-    background: var(--theme-color);
-    border-right: 1px solid transparent;
-  }
+const Switch = styled(ToolbarButtonGroupItem)`
+  padding: 0.4rem;
 `
 
 const DotLabel = styled(FiberManualRecord)`
@@ -41,15 +32,12 @@ const TripletLabel = styled.span`
   padding: 0 0.24em;
 `
 
-const Content = styled(Button)`
-  border-radius: 0 4px 4px 0;
-  border: 1px solid var(--divider-color);
-  border-left: 1px solid transparent;
-  min-width: 0;
+const Content = styled(ToolbarButtonGroupItem)`
+  padding: 0;
 `
 
 const Value = styled.div`
-  min-width: 2em;
+  min-width: 3em;
   pointer-events: none;
   font-size: 0.9rem;
 `
@@ -102,7 +90,9 @@ function QuantizeSelector({
   return (
     <Container>
       <Switch selected={enabled} onClick={onClickSwitch}>
-        <Note />
+        <Tooltip title={localized("snap-to-grid", "Snap to Grid")}>
+          <Note />
+        </Tooltip>
       </Switch>
       <Content
         onClick={(e) => {
