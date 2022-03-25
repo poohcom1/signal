@@ -166,16 +166,12 @@ export const FileMenuButton: FC = observer(() => {
         <MenuItem onClick={onClickExport}>
           {localized("export-audio", "Export Audio")}
         </MenuItem>
-<<<<<<< HEAD
 
         {/* @signal-ml */}
         <MenuItem onClick={onClickExportXML}>
           {localized("export-xml", "Export Track as XML")}
         </MenuItem>
-      </Menu>
-=======
       </StyledMenu>
->>>>>>> main
     </>
   )
 })

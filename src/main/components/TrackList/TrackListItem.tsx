@@ -3,6 +3,7 @@ import { Headset, Layers, VolumeOff, VolumeUp } from "@mui/icons-material"
 import { IconButton } from "@mui/material"
 import { observer } from "mobx-react-lite"
 import { FC, useCallback, useState } from "react"
+import MLRootStore from "../../../ml-analyzer/stores/MLRootStore"
 import {
   addTrack,
   removeTrack,

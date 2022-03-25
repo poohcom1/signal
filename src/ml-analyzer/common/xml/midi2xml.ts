@@ -7,7 +7,7 @@ import {
   MusicXMLNote,
   Note,
   NoteLength,
-  RestNote,
+  RestNote
 } from "./XMLTemplate"
 
 const NOTE_NAMES = [
@@ -144,7 +144,7 @@ export const downloadSelectedTrackXML = (rootStore: RootStore) => () => {
 
   const lyrics = notes.map((note) => getOrAddLyric(rootStore)(note)!.text)
 
-  const xml = notesToXML(notes, lyrics, rootStore.pianoRollStore.currentTempo)
+  const xml = notesToXML(notes, lyrics, rootStore.pianoRollStore.currentTempo!)
 
   downloadBlob(new Blob([xml], { type: "text/plain" }), "notes.musicxml")
 }

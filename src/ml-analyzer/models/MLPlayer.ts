@@ -1,14 +1,17 @@
 import Player from "../../common/player/Player"
 import TrackMute from "../../common/trackMute"
 import { SynthOutput } from "../../main/services/SynthOutput"
-import RootStore from "../../main/stores/RootStore"
+import { SongStore } from "../../main/stores/SongStore"
 import MLTracksStore from "../stores/MLTracksStore"
 
 export default class MLPlayer extends Player {
   public mlTrackStore: MLTracksStore | null = null
 
-  constructor(output: SynthOutput, trackMute: TrackMute, rootStore: RootStore) {
-    super(output, trackMute, rootStore)
+  constructor(output: SynthOutput,
+    metronomeOutput: SynthOutput,
+    trackMute: TrackMute,
+    songStore: SongStore) {
+    super(output, metronomeOutput, trackMute, songStore)
   }
 
   public play(): void {

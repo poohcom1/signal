@@ -1,6 +1,6 @@
+import styled from "@emotion/styled"
 import { observer } from "mobx-react-lite"
 import React, { FC } from "react"
-import styled from "styled-components"
 import { isNoteEvent } from "../../../../common/track"
 import { GraphAxis } from "../../../../main/components/ControlPane/Graph/GraphAxis"
 import { useStores } from "../../../../main/hooks/useStores"

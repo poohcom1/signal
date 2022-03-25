@@ -12,7 +12,7 @@ import {
   Select,
   Switch,
   TextField,
-} from "@material-ui/core"
+} from "@mui/material"
 import { observer } from "mobx-react-lite"
 import { FC, useCallback, useEffect, useState } from "react"
 import { removeTrack } from "../../../main/actions"
