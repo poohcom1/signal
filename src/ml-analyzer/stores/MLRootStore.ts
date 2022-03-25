@@ -4,7 +4,25 @@ import MLPlayer from "../models/MLPlayer"
 import MLRootViewStore from "./MLRootViewStore"
 import MLTracksStore from "./MLTracksStore"
 
-export type Configs = Record<string, Record<string, string | number | boolean>>
+type ConfigTypes = "boolean" | "string" | "number" | "enum"
+
+interface ConfigItem<T extends ConfigTypes> {
+  type: T,
+  default: boolean | string | number | undefined
+}
+
+export interface BooleanConfig extends ConfigItem<"boolean"> { }
+export interface StringConfig extends ConfigItem<"string"> { }
+export interface NumberConfig extends ConfigItem<"number"> {
+  min: number | undefined;
+  max: number | undefined;
+  float: boolean | undefined;
+}
+export interface EnumConfig extends ConfigItem<"enum"> {
+  enum: string[]
+}
+
+export type Configs = Record<string, Record<string, ConfigItem<ConfigTypes>>>
 
 export default class MLRootStore extends RootStore {
   mlTrackStore = new MLTracksStore()

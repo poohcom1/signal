@@ -58,6 +58,6 @@ export const RootView: FC = () => (
     <ExportDialog />
     <ExportProgressDialog />
     {/* @signal-ml */}
-    <TrackSettings />
+    <TrackSettings createMode={true} />
   </>
 )
