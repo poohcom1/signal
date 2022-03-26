@@ -4,30 +4,41 @@ import MLPlayer from "../models/MLPlayer"
 import MLRootViewStore from "./MLRootViewStore"
 import MLTracksStore from "./MLTracksStore"
 
-type ConfigTypes = "boolean" | "string" | "number" | "enum"
 
-interface ConfigItem<T extends ConfigTypes> {
+
+interface ConfigParam<T extends string> {
   type: T,
-  default: boolean | string | number | undefined
+  default: boolean | string | number
+  label: string
 }
 
-export interface BooleanConfig extends ConfigItem<"boolean"> { }
-export interface StringConfig extends ConfigItem<"string"> { }
-export interface NumberConfig extends ConfigItem<"number"> {
+interface BooleanParam extends ConfigParam<"boolean"> { }
+interface StringParam extends ConfigParam<"string"> { }
+interface IntParam extends ConfigParam<"int"> {
   min: number | undefined;
   max: number | undefined;
-  float: boolean | undefined;
 }
-export interface EnumConfig extends ConfigItem<"enum"> {
+interface FloatParam extends ConfigParam<"float"> {
+  min: number | undefined;
+  max: number | undefined;
+  step: number | undefined
+}
+interface EnumParam extends ConfigParam<"enum"> {
   enum: string[]
 }
 
-export type Configs = Record<string, Record<string, ConfigItem<ConfigTypes>>>
+export type ModelData = Record<string, {
+  name: string
+  format: "midi" | "musicxml"
+  description: string
+  parameters: Record<string, BooleanParam | StringParam | IntParam | FloatParam | EnumParam>
+}>
+
+export type Config = Record<string, string | boolean | number>
 
 export default class MLRootStore extends RootStore {
   mlTrackStore = new MLTracksStore()
   mlRootViewStore = new MLRootViewStore()
-  configs: Configs = {}
 
   constructor() {
     super()

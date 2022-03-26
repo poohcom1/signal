@@ -1,6 +1,6 @@
 import Track from "../../common/track/Track"
 import { trackToMidi } from "../common/midi/customMidiConversion"
-import { Configs } from "../stores/MLRootStore"
+import { ModelData } from "../stores/MLRootStore"
 
 const BACKEND_URL = "http://localhost:5000" // "http://192.168.1.40:5000"
 
@@ -39,11 +39,11 @@ export function convertMidi(
 }
 
 
-export async function getModels(): Promise<Result<Configs>> {
+export async function getModels(): Promise<Result<ModelData>> {
   try {
     const res = await fetch(`${BACKEND_URL}/models`, { method: "GET" })
 
-    const list = await res.json() as Configs
+    const list = await res.json() as ModelData
 
     return { data: list, error: null }
   } catch (error) {

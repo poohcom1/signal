@@ -1,27 +1,55 @@
 import {
+  Box,
   Button,
   Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   FormControl,
   FormControlLabel,
   InputLabel,
   MenuItem,
   Select,
+  Slider,
   Switch,
   TextField,
 } from "@mui/material"
 import { observer } from "mobx-react-lite"
-import { FC, useCallback, useEffect, useState } from "react"
+import { FC, useCallback, useEffect, useMemo, useState } from "react"
 import { removeTrack } from "../../../main/actions"
 import { useStores } from "../../../main/hooks/useStores"
 import { getModels } from "../../adapters/adapter"
-import MLRootStore, { Configs, EnumConfig } from "../../stores/MLRootStore"
+import MLRootStore, { Config, ModelData } from "../../stores/MLRootStore"
+
+function convertDisplayString(text: string) {
+  // Thanks to https://stackoverflow.com/questions/7225407/convert-camelcasetext-to-title-case-text
+  const result = text.replace(/([A-Z])/g, " $1")
+  return result.charAt(0).toUpperCase() + result.slice(1)
+}
 
 interface TrackSettingsProps {
   createMode: boolean
+}
+
+function defaultConfigs(
+  modelData: ModelData,
+  models: string[]
+): Record<string, Config> {
+  const modelConfigs: Record<string, Config> = {}
+
+  for (const model of models) {
+    const config: Config = {}
+
+    for (const key of Object.keys(modelData[model].parameters)) {
+      config[key] = modelData[model].parameters[key].default
+    }
+
+    modelConfigs[model] = config
+  }
+
+  return modelConfigs
 }
 
 export const TrackSettings: FC<TrackSettingsProps> = observer(
@@ -31,26 +59,36 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
 
     const close = () => (mlRootViewStore.openTrackSettings = false)
 
-    const [models, setModels] = useState<string[]>()
-    const [configs, setConfigs] = useState<Configs>({})
+    const [models, setModels] = useState<string[]>([])
+    const [modelData, setModelData] = useState<ModelData>({})
+    const [modelConfigs, setModelConfig] = useState<Record<string, Config>>({})
 
     useEffect(() => {
-      getModels().then((results) => {
-        if (!results.error) {
-          const models = Array.from(Object.keys(results.data))
+      if (createMode) {
+        getModels().then((results) => {
+          if (!results.error) {
+            const models = Array.from(Object.keys(results.data))
 
-          setModels(models)
-          setModel(models[0])
+            setModels(models)
+            setModel(models[0])
 
-          console.log(results.data)
+            setModelConfig(defaultConfigs(results.data, models))
+            setModelData(results.data)
+          } else {
+            alert(results.error)
+          }
+        })
+      } else {
+        const track = mlTrackStore.get(mlRootViewStore.settingTrackId)
 
-          setConfigs(results.data)
-          rootStore.configs = results.data
-        } else {
-          alert(results.error)
+        if (track) {
+          setModel(track.model)
+          const defaultConfig = defaultConfigs(modelData, models)
+          defaultConfig[track.model] = track.modelOptions
+          setModelConfig(defaultConfig)
         }
-      })
-    }, [])
+      }
+    }, [createMode])
 
     // Option data
     const [isRegularTrack, setIsRegularTrack] = useState(false)
@@ -59,7 +97,7 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
     // Dialog actions callbacks
     const handleCancel = useCallback(() => {
       if (createMode) {
-        removeTrack(rootStore)(mlRootViewStore.currentSettingsTrack)
+        removeTrack(rootStore)(mlRootViewStore.settingTrackId)
       }
       close()
     }, [])
@@ -69,24 +107,154 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
         if (!isRegularTrack) {
           const track = mlTrackStore.addTrack(
             rootStore,
-            mlRootViewStore.currentSettingsTrack
+            mlRootViewStore.settingTrackId
           )
           track.model = model
+          track.modelOptions = modelConfigs[model]
         } else {
           mlTrackStore.addRegularTrack(
             rootStore,
-            mlRootViewStore.currentSettingsTrack
+            mlRootViewStore.settingTrackId
           )
         }
       } else {
+        const track = mlTrackStore.get(mlRootViewStore.settingTrackId)
+
+        if (track) {
+          track.modelOptions = modelConfigs[model]
+        }
       }
 
       close()
-    }, [isRegularTrack, model, mlRootViewStore.currentSettingsTrack])
+    }, [isRegularTrack, model, mlRootViewStore.settingTrackId])
+
+    const setConfig = useCallback(
+      (key, value) => {
+        modelConfigs[model][key] = value
+
+        setModelConfig(modelConfigs)
+      },
+      [setModelConfig]
+    )
+
+    // Rendering configs
+    const drawConfig = useMemo(() => {
+      if (!modelData[model]) {
+        return <></>
+      }
+
+      console.log(modelConfigs)
+
+      return Object.keys(modelData[model].parameters).map((key) => {
+        const param = modelData[model].parameters[key]
+        const label = param.label ?? convertDisplayString(key)
+
+        const config = modelConfigs[model]
+
+        switch (param.type) {
+          case "boolean":
+            return (
+              <FormControlLabel
+                key={`${model}_${key}`}
+                control={<Switch defaultChecked />}
+                label={label}
+                value={config[key] as boolean}
+                onChange={(_e, value) => setConfig(key, value as boolean)}
+              />
+            )
+          case "enum":
+            const values = param.enum
+
+            if (values.length === 0) {
+              return <></>
+            }
+
+            return (
+              <TextField
+                key={`${model}_${key}`}
+                label={label}
+                variant="standard"
+                select
+                value={config[key] ?? ""}
+                onChange={(e) => setConfig(key, e.target.value)}
+              >
+                {values.map((value) => (
+                  <MenuItem key={value} value={value}>
+                    {value}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )
+          case "string":
+            return (
+              <TextField
+                key={`${model}_${key}`}
+                label={label}
+                variant="standard"
+                value={config[key] as string}
+                onChange={(e) => setConfig(key, e.target.value)}
+              />
+            )
+          case "int":
+            return (
+              <TextField
+                key={`${model}_${key}`}
+                label={label}
+                type="number"
+                variant="standard"
+                value={config[key] as number}
+                onChange={(e) =>
+                  setConfig(key, e.target.value as unknown as number)
+                }
+              />
+            )
+          case "float":
+            if (param.min !== undefined && param.max !== undefined) {
+              return (
+                <>
+                  <InputLabel>
+                    {label} - {config[key] as unknown as number}
+                  </InputLabel>
+                  <Slider
+                    key={`${model}_${key}`}
+                    defaultValue={param.default as number}
+                    step={param.step ?? 0.05}
+                    marks
+                    min={param.min}
+                    max={param.max}
+                    valueLabelDisplay="auto"
+                    value={config[key] as number}
+                    onChange={(e, value) =>
+                      setConfig(key, value as unknown as number)
+                    }
+                  />
+                </>
+              )
+            } else {
+              return (
+                <TextField
+                  key={`${model}_${key}`}
+                  label={label}
+                  type="number"
+                  value={config[key] as number}
+                  onChange={(e) =>
+                    setConfig(key, e.target.value as unknown as number)
+                  }
+                />
+              )
+            }
+        }
+      })
+    }, [model, modelData, modelConfigs, setModelConfig])
 
     return (
-      <Dialog open={mlRootViewStore.openTrackSettings} onClose={close}>
-        <DialogTitle>{`Track #${mlRootViewStore.currentSettingsTrack} Settings`}</DialogTitle>
+      <Dialog
+        open={mlRootViewStore.openTrackSettings}
+        onClose={close}
+        fullWidth={true}
+        maxWidth={"md"}
+      >
+        <DialogTitle>{`Track #${mlRootViewStore.settingTrackId} Settings`}</DialogTitle>
 
         <DialogContent>
           <FormControlLabel
@@ -102,13 +270,15 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
             label="Create regular track"
           />
           <div style={{ display: isRegularTrack ? "none" : "block" }}>
-            <FormControl variant="outlined" fullWidth margin="normal">
+            <FormControl variant="outlined" fullWidth>
               <InputLabel id="model-select">Model</InputLabel>
               <Select
                 label="Model"
                 labelId="model-select"
                 value={model}
-                onChange={(e) => setModel(e.target.value as string)}
+                onChange={(e) => {
+                  setModel(e.target.value as string)
+                }}
               >
                 {models ? (
                   models.map((model) => (
@@ -121,66 +291,18 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
             </FormControl>
 
             <div>
-              <h2>{model} Configs</h2>
-              {configs[model] ? (
-                Object.keys(configs[model]).map((key) => {
-                  const param = configs[model][key]
-
-                  switch (param.type) {
-                    case "boolean":
-                      return (
-                        <FormControlLabel
-                          control={<Switch defaultChecked />}
-                          label={key}
-                        />
-                      )
-                    case "enum":
-                      const values = (param as EnumConfig).enum
-
-                      if (values.length === 0) {
-                        return <></>
-                      }
-
-                      return (
-                        <FormControl
-                          variant="outlined"
-                          fullWidth
-                          margin="normal"
-                        >
-                          <InputLabel id="model-select">{key}</InputLabel>
-                          <Select label="Model" labelId="model-select">
-                            {values.map((value) => (
-                              <MenuItem value={value}>{value}</MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      )
-                    case "string":
-                      return (
-                        <TextField
-                          id="standard-basic"
-                          label={key}
-                          variant="standard"
-                        />
-                      )
-                    case "number":
-                      return (
-                        <TextField
-                          id="standard-number"
-                          label={key}
-                          type="number"
-                          InputLabelProps={{
-                            shrink: true,
-                          }}
-                          variant="standard"
-                          defaultValue={param.default}
-                        />
-                      )
-                  }
-                })
-              ) : (
-                <></>
-              )}
+              <Divider style={{ marginTop: "16px" }}>{model} Configs</Divider>
+              {/* Individual configs */}
+              <Box
+                component="form"
+                sx={{
+                  "& .MuiTextField-root": { m: 1, width: "25ch" },
+                }}
+                noValidate
+                autoComplete="off"
+              >
+                {drawConfig}
+              </Box>
             </div>
           </div>
         </DialogContent>
@@ -188,7 +310,7 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
         <DialogActions>
           <Button
             onClick={handleCancel}
-            disabled={mlRootViewStore.currentSettingsTrack === 1}
+            disabled={mlRootViewStore.settingTrackId === 1}
           >
             Cancel
           </Button>

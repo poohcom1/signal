@@ -79,7 +79,7 @@ export default class MLTracksStore {
   }
 
   onTrackAdded(rootStore: MLRootStore, trackId: number) {
-    rootStore.mlRootViewStore.currentSettingsTrack = trackId
+    rootStore.mlRootViewStore.settingTrackId = trackId
     rootStore.mlRootViewStore.openTrackSettings = true
   }
 
