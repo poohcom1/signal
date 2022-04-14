@@ -1,9 +1,12 @@
 import { clone } from "lodash"
+import { LyricsEvent } from "midifile-ts"
 import { makeObservable, observable } from "mobx"
 import { NoteEvent, TrackEvent } from "../../../src/common/track"
 import { isNoteEvent } from "../../common/track/identify"
+import RootStore from "../../main/stores/RootStore"
 import { convertMidi } from "../adapters/adapter"
 import { eventsToMidi } from "../common/midi/customMidiConversion"
+import { eventsToXML } from "../common/xml/midi2xml"
 import MLTrack from "./MLTrack"
 
 export enum FetchState {
@@ -16,6 +19,7 @@ export enum FetchState {
 
 export default class Chunk {
   public notes: NoteEvent[] = []
+  public lyrics: LyricsEvent[] = []
   public startTick: number = -1
   public duration: number = -1
   public audioSrc: string = ""
@@ -76,7 +80,7 @@ export default class Chunk {
 
   // Methods
   public delayedConvert(
-    timebase: number,
+    rootStore: RootStore,
     onUpdate: (state: FetchState) => void = () => { },
     timeout: number = 3000
   ) {
@@ -87,12 +91,12 @@ export default class Chunk {
     this.state = FetchState.Prefetch
 
     this._convertTimeout = setTimeout(() => {
-      this.convertMidiToAudio(timebase, onUpdate)
+      this.convertMidiToAudio(rootStore, onUpdate)
     }, timeout)
   }
 
-  public convertMidiToAudio(
-    timebase: number,
+  private convertMidiToAudio(
+    rootStore: RootStore,
     onUpdate: (state: FetchState) => void = () => { }
   ) {
     if (this.state !== FetchState.Fetching && this.audioSrc === "") {
@@ -101,11 +105,28 @@ export default class Chunk {
       this.state = FetchState.Fetching
       onUpdate(this.state)
 
-      const bytes = eventsToMidi(this.notes, timebase)
+      let bytes = new Uint8Array()
+      let blob = new Blob()
+
+      switch (this._mlTrack.modelFormat) {
+        case "midi":
+          bytes = eventsToMidi(this.notes, rootStore.song.timebase)
+          blob = new Blob([bytes], { type: "application/octet-stream" })
+          break
+        case "musicxml":
+          const xmlString = eventsToXML(this.notes, rootStore)
+          if (!xmlString) {
+            console.error("Selected track is null")
+            return
+          }
+          blob = new Blob([xmlString], { type: "text/plain" })
+          break
+      }
 
       const { signal } = this._fetchController
 
-      convertMidi(bytes, signal)
+
+      convertMidi(blob, rootStore.pianoRollStore.currentTempo ?? 120, signal, this._mlTrack.model, this._mlTrack.modelOptions)
         .then((res) => {
           if (res.ok) {
             return res.blob()

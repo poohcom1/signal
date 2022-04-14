@@ -27,7 +27,7 @@ interface EnumParam extends ConfigParam<"enum"> {
   enum: string[]
 }
 
-export type ModelData = Record<string, {
+export type ModelsData = Record<string, {
   name: string
   format: "midi" | "musicxml"
   description: string

@@ -21,7 +21,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from "react"
 import { removeTrack } from "../../../main/actions"
 import { useStores } from "../../../main/hooks/useStores"
 import { getModels } from "../../adapters/adapter"
-import MLRootStore, { Config, ModelData } from "../../stores/MLRootStore"
+import MLRootStore, { Config, ModelsData } from "../../stores/MLRootStore"
 
 function convertDisplayString(text: string) {
   // Thanks to https://stackoverflow.com/questions/7225407/convert-camelcasetext-to-title-case-text
@@ -34,7 +34,7 @@ interface TrackSettingsProps {
 }
 
 function defaultConfigs(
-  modelData: ModelData,
+  modelData: ModelsData,
   models: string[]
 ): Record<string, Config> {
   const modelConfigs: Record<string, Config> = {}
@@ -60,8 +60,8 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
     const close = () => (mlRootViewStore.openTrackSettings = false)
 
     const [models, setModels] = useState<string[]>([])
-    const [modelData, setModelData] = useState<ModelData>({})
-    const [modelConfigs, setModelConfig] = useState<Record<string, Config>>({})
+    const [modelData, setModelData] = useState<ModelsData>({})
+    const [modelConfigs, setModelConfigs] = useState<Record<string, Config>>({})
 
     useEffect(() => {
       if (createMode) {
@@ -72,7 +72,7 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
             setModels(models)
             setModel(models[0])
 
-            setModelConfig(defaultConfigs(results.data, models))
+            setModelConfigs(defaultConfigs(results.data, models))
             setModelData(results.data)
           } else {
             alert(results.error)
@@ -85,7 +85,7 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
           setModel(track.model)
           const defaultConfig = defaultConfigs(modelData, models)
           defaultConfig[track.model] = track.modelOptions
-          setModelConfig(defaultConfig)
+          setModelConfigs(defaultConfig)
         }
       }
     }, [createMode])
@@ -95,14 +95,14 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
     const [model, setModel] = useState<string>("")
 
     // Dialog actions callbacks
-    const handleCancel = useCallback(() => {
+    const handleCancel = () => {
       if (createMode) {
         removeTrack(rootStore)(mlRootViewStore.settingTrackId)
       }
       close()
-    }, [])
+    }
 
-    const handleApply = useCallback(() => {
+    const handleApply = () => {
       if (createMode) {
         if (!isRegularTrack) {
           const track = mlTrackStore.addTrack(
@@ -110,6 +110,7 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
             mlRootViewStore.settingTrackId
           )
           track.model = model
+          track.modelFormat = modelData[model].format
           track.modelOptions = modelConfigs[model]
         } else {
           mlTrackStore.addRegularTrack(
@@ -126,15 +127,15 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
       }
 
       close()
-    }, [isRegularTrack, model, mlRootViewStore.settingTrackId])
+    }
 
     const setConfig = useCallback(
       (key, value) => {
         modelConfigs[model][key] = value
 
-        setModelConfig(modelConfigs)
+        setModelConfigs({ ...modelConfigs })
       },
-      [setModelConfig]
+      [modelConfigs, model, setModelConfigs]
     )
 
     // Rendering configs
@@ -142,8 +143,6 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
       if (!modelData[model]) {
         return <></>
       }
-
-      console.log(modelConfigs)
 
       return Object.keys(modelData[model].parameters).map((key) => {
         const param = modelData[model].parameters[key]
@@ -245,7 +244,14 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
             }
         }
       })
-    }, [model, modelData, modelConfigs, setModelConfig])
+    }, [
+      model,
+      modelData,
+      modelConfigs,
+      setModelConfigs,
+      setConfig,
+      setModelConfigs,
+    ])
 
     return (
       <Dialog

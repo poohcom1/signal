@@ -19,7 +19,7 @@ interface SyllableDivProps extends Partial<IProps> {
   display: boolean
 }
 
-const SyllableDiv = styled.div<SyllableDivProps>`
+const SyllableDiv = styled.button<SyllableDivProps>`
   margin: 0;
   width: ${(props) => props.width}px;
   position: absolute;
@@ -30,6 +30,11 @@ const SyllableDiv = styled.div<SyllableDivProps>`
   font-size: 20px;
   padding-left: 5px;
 
+  color: white;
+  background-color: transparent;
+  border: none;
+  outline: none;
+
   &:hover {
     background-color: rgb(0, 0, 0, 0.5);
   }
@@ -37,11 +42,15 @@ const SyllableDiv = styled.div<SyllableDivProps>`
 
 const SyllableEdit = styled.input<SyllableDivProps>`
   margin: 0;
-  width: 20px;
   position: absolute;
   left: ${(props) => props.x}px;
   top: ${(props) => props.y}px;
   display: ${(props) => (props.display ? "block" : "none")};
+  background-color: transparent;
+
+  color: white;
+  outline: none;
+  border: none;
 
   font-size: 20px;
 `
@@ -84,11 +93,12 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
     return (
       <>
         <SyllableEdit
+          style={{ width: this.props.width }}
           ref={this._inputRef}
           x={this.props.x}
           y={this.props.y}
           width={this.props.width}
-          display={this.state.editing}
+          display={true}
           value={this.state.text}
           onKeyDown={(ke) => {
             if (ke.key === "Enter") {
@@ -98,17 +108,8 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
           onFocus={(e) => e.target.select()}
           onBlur={() => this.handleSubmit()}
           onChange={(e) => this.setState({ text: e.target.value })}
+          placeholder="_"
         />
-
-        <SyllableDiv
-          display={!this.state.editing}
-          x={this.props.x}
-          y={this.props.y}
-          width={this.props.width}
-          onClick={this.handleClick}
-        >
-          {this.state.text}
-        </SyllableDiv>
       </>
     )
   }

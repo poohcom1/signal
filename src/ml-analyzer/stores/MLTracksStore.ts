@@ -50,7 +50,7 @@ function createTrackAnalyzer(
         for (const chunk of mlTrack.chunks) {
           if (chunk.state == FetchState.UnFetched) {
             chunk.delayedConvert(
-              rootStore.song.timebase,
+              rootStore,
               (_state: FetchState) => {
                 rootStore.mlTrackStore.triggerChange()
               },

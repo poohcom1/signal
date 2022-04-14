@@ -7,6 +7,7 @@ export default class MLTrack {
 
   // ML Data
   public model: string = ""
+  public modelFormat: "midi" | "musicxml" = "midi"
   public modelOptions: Record<string, string | boolean | number> = {}
 
   constructor(disposer: IReactionDisposer) {

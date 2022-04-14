@@ -20,34 +20,46 @@ export function isLyricsEvent(event: TrackEvent): event is TrackLyricsEvent {
  */
 export const getOrAddLyric =
   (rootStore: RootStore) =>
-  (note: NoteEvent, defaultLyrics = "_"): TrackLyricsEvent => {
-    const selectedTrack = rootStore.song.selectedTrack!
+    (note: NoteEvent, defaultLyrics = ""): TrackLyricsEvent => {
+      const selectedTrack = rootStore.song.selectedTrack!
 
-    const lyricEvents = selectedTrack.events.filter(isLyricsEvent)
+      const lyricEvents = selectedTrack.events.filter(isLyricsEvent)
 
-    const lyric = lyricEvents.find((e) => e.noteId === note.id)
+      const lyric = lyricEvents.find((e) => e.noteId === note.id)
 
-    if (lyric) {
-      lyric.tick = note.tick
+      if (lyric) {
+        lyric.tick = note.tick
 
-      return lyric
-    } else {
-      const lyricEvent: LyricsEvent = {
-        type: "meta",
-        subtype: "lyrics",
-        text: defaultLyrics,
-        deltaTime: note.tick,
+        return lyric
+      } else {
+        const lyricEvent: LyricsEvent = {
+          type: "meta",
+          subtype: "lyrics",
+          text: defaultLyrics,
+          deltaTime: note.tick,
+        }
+
+        const trackLyricEvent = toTrackEvents([lyricEvent])[0];
+
+        (trackLyricEvent as unknown as TrackLyricsEvent).noteId = note.id
+
+        selectedTrack.addEvents([trackLyricEvent])
+
+        return trackLyricEvent as unknown as TrackLyricsEvent
+      }
+    }
+
+export const findMatchingLyrics = (lyricEvents: TrackLyricsEvent[], note: NoteEvent): TrackLyricsEvent => {
+      const lyric = lyricEvents.find((e) => e.noteId === note.id)
+
+      if (lyric) {
+        lyric.tick = note.tick
+
+        return lyric
       }
 
-      const trackLyricEvent = toTrackEvents([lyricEvent])[0]
-
-      ;(trackLyricEvent as unknown as TrackLyricsEvent).noteId = note.id
-
-      selectedTrack.addEvents([trackLyricEvent])
-
-      return trackLyricEvent as unknown as TrackLyricsEvent
+      return {} as unknown as TrackLyricsEvent
     }
-  }
 
 export const setLyric =
   (rootStore: RootStore) => (noteId: number, lyric: string) => {

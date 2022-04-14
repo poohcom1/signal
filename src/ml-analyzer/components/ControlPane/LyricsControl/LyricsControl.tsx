@@ -49,11 +49,11 @@ const LyricsControl: FC<PianoVelocityControlProps> = observer(
 
       return {
         noteId: note.id,
-        x: transform.getX(lyric.tick),
+        x: transform.getX(lyric.tick) - scrollLeft,
         y: 0,
         noteNumber: note.noteNumber,
         height: 20,
-        width: transform.getX(note.duration),
+        width: transform.getX(note.duration) - scrollLeft,
         tick: lyric.tick,
         lyric: lyric.text,
       }

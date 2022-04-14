@@ -1,7 +1,7 @@
-import { isNoteEvent, NoteEvent } from "../../../../src/common/track"
+import { isNoteEvent, NoteEvent, TrackEvent } from "../../../../src/common/track"
 import { downloadBlob } from "../../../common/helpers/Downloader"
 import RootStore from "../../../main/stores/RootStore"
-import { getOrAddLyric, isLyricsEvent } from "../../actions/lyrics"
+import { getOrAddLyric } from "../../actions/lyrics"
 import {
   createTemplate,
   MusicXMLNote,
@@ -64,7 +64,7 @@ export function midiNoteToXMLNote(
     octave,
     lyric,
     type,
-    duration: duration * 2,
+    duration,
   }
 }
 
@@ -78,7 +78,7 @@ function createXMLRest(noteDuration: number, timebase = 480): RestNote {
 
   return {
     type,
-    duration: duration * 2,
+    duration,
   }
 }
 
@@ -88,7 +88,7 @@ function createXMLRest(noteDuration: number, timebase = 480): RestNote {
  * @param lyrics Array of lyrics for each note
  */
 export function notesToXMLNotes(
-  notes: NoteEvent[],
+  notes: TrackEvent[],
   lyrics: string[]
 ): MusicXMLNote[] {
   const xmlNotes: MusicXMLNote[] = []
@@ -96,37 +96,53 @@ export function notesToXMLNotes(
   let previousTickEnd = 0
 
   for (let i = 0; i < notes.length; i++) {
-    if (notes[i].tick - previousTickEnd > 0) {
-      const rest = createXMLRest(notes[i].tick - previousTickEnd)
+    const trackEvent = notes[i]
 
-      xmlNotes.push(rest)
+    if (isNoteEvent(trackEvent)) {
+      if (trackEvent.tick - previousTickEnd > 0) {
+        const rest = createXMLRest(trackEvent.tick - previousTickEnd)
+
+        xmlNotes.push(rest)
+      }
+
+      const note = midiNoteToXMLNote(trackEvent, lyrics[i])
+
+      xmlNotes.push(note)
+
+      previousTickEnd = trackEvent.tick + trackEvent.duration
     }
 
-    const note = midiNoteToXMLNote(notes[i], lyrics[i])
-
-    xmlNotes.push(note)
-
-    previousTickEnd = notes[i].tick + notes[i].duration
   }
 
   return xmlNotes
 }
 
-export function notesToXML(
-  noteEvents: NoteEvent[],
-  lyrics: string[],
-  tempo: number
+export function eventsToXML(
+  noteEvents: TrackEvent[],
+  rootStore: RootStore,
 ) {
-  const notes = notesToXMLNotes(noteEvents, lyrics)
+  const selectedTrack = rootStore.song.selectedTrack
+
+  if (!selectedTrack) {
+    alert("No track selected!")
+    return
+  }
+
+  const notes = selectedTrack.events.filter(isNoteEvent)
+
+  const lyrics = notes.map((note) => getOrAddLyric(rootStore)(note)!.text)
 
   return createTemplate(
-    [
-      {
-        notes,
-        bpm: tempo,
-      },
-    ],
-    tempo
+    [{
+      type: NoteLength.NOTE_TYPE_WHOLE,
+      duration: 1
+    }, 
+    ...notesToXMLNotes(noteEvents, lyrics),
+    {
+      type: NoteLength.NOTE_TYPE_QUARTER,
+      duration: 1
+    }],
+    rootStore.pianoRollStore.currentTempo ?? 120,
   )
 }
 
@@ -140,11 +156,8 @@ export const downloadSelectedTrackXML = (rootStore: RootStore) => () => {
 
   const notes = selectedTrack.events.filter(isNoteEvent)
 
-  console.log(selectedTrack.events.filter(isLyricsEvent))
+  const xml = eventsToXML(notes, rootStore)
 
-  const lyrics = notes.map((note) => getOrAddLyric(rootStore)(note)!.text)
-
-  const xml = notesToXML(notes, lyrics, rootStore.pianoRollStore.currentTempo!)
-
-  downloadBlob(new Blob([xml], { type: "text/plain" }), "notes.musicxml")
+  if (xml)
+    downloadBlob(new Blob([xml], { type: "text/plain" }), "notes.musicxml")
 }

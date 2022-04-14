@@ -18,8 +18,26 @@ export enum NoteLength {
   NOTE_TYPE_MAXIMA = "maxima",
 }
 
+const NoteLengthMap: { [key: number]: NoteLength } = {
+  0.00390625: NoteLength.NOTE_TYPE_1024TH,
+  0.0078125: NoteLength.NOTE_TYPE_512TH,
+  0.015625: NoteLength.NOTE_TYPE_256TH,
+  0.03125: NoteLength.NOTE_TYPE_128TH,
+  0.0625: NoteLength.NOTE_TYPE_64TH,
+  0.125: NoteLength.NOTE_TYPE_32ND,
+  0.25: NoteLength.NOTE_TYPE_16TH,
+  0.5: NoteLength.NOTE_TYPE_EIGHTH,
+  1: NoteLength.NOTE_TYPE_QUARTER,
+  2: NoteLength.NOTE_TYPE_HALF,
+  4: NoteLength.NOTE_TYPE_WHOLE,
+  8: NoteLength.NOTE_TYPE_BREVE,
+  16: NoteLength.NOTE_TYPE_LONG,
+  32: NoteLength.NOTE_TYPE_MAXIMA,
+}
+
+
 interface Measure {
-  notes: MusicXMLNote[]
+  notes: (Note | RestNote)[]
   bpm: number
 }
 
@@ -32,9 +50,11 @@ export interface Note extends MusicXMLNote {
   noteName: string
   octave: number
   lyric: string
+
+  tie?: "start" | "stop"
 }
 
-export interface RestNote extends MusicXMLNote {}
+export interface RestNote extends MusicXMLNote { }
 
 function isNote(note: MusicXMLNote): note is Note {
   return "noteName" in note
@@ -42,11 +62,49 @@ function isNote(note: MusicXMLNote): note is Note {
 
 /**
  *
- * @param measures
+ * @param notes
  * @param tempo
  * @returns MusicXML string
  */
-export function createTemplate(measures: Measure[], tempo: number): string {
+export function createTemplate(notes: MusicXMLNote[], tempo: number): string {
+  const measures: Measure[] = [{ notes: [], bpm: tempo }]
+
+  let i = 0
+  let currentDuration = 0
+
+  for (const note of notes) {
+    currentDuration += note.duration
+
+    if (currentDuration > 4) {
+      const overflow = currentDuration - 4
+      const remaining = note.duration - overflow
+
+      measures[i].notes.push({ ...note, type: NoteLengthMap[remaining], duration: remaining, tie: "start" })
+
+      measures.push({ notes: [{ ...note, type: NoteLengthMap[overflow], lyric: "-", duration: overflow, tie: "stop" }], bpm: tempo })
+      i++
+
+      continue
+    }
+
+    measures[i].notes.push(note)
+
+    if (currentDuration >= 4) {
+      currentDuration = 0
+
+      measures.push({ notes: [], bpm: tempo })
+      i++
+    }
+  }
+
+  if (currentDuration < 4) {
+    const missingDuration = 4 - currentDuration
+
+    measures[i].notes.push({type: NoteLengthMap[missingDuration], duration: missingDuration})
+  }
+
+  
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN"
   "http://www.musicxml.org/dtds/partwise.dtd">
@@ -82,12 +140,12 @@ export function createTemplate(measures: Measure[], tempo: number): string {
 
   <part id="P1">
   ${measures
-    .map(
-      (measure) => `
+      .map(
+        (measure) => `
     <measure number="1">
 
       <attributes>
-        <divisions>2</divisions>
+        <divisions>1</divisions>
         <key>
           <fifths>0</fifths>
         </key>
@@ -107,12 +165,11 @@ export function createTemplate(measures: Measure[], tempo: number): string {
         <sound tempo="${tempo}" />
       </direction>
       ${measure.notes
-        .map(
-          (note) => `
+            .map(
+              (note) => `
           <note>
-            ${
-              isNote(note)
-                ? `
+            ${isNote(note)
+                  ? `
                   <pitch>
                     <step>${note.noteName.replace("#", "")}</step>
                     <alter>${note.noteName.includes("#") ? 1 : 0}</alter>
@@ -122,24 +179,25 @@ export function createTemplate(measures: Measure[], tempo: number): string {
                   <voice>1</voice>
                   <type>${note.type}</type>
                   <stem>down</stem>
+                  ${note.tie ? `<tie type="${note.tie}" />` : ""}
                   <lyric number="1">
                     <syllabic>single</syllabic>
                     <text>${note.lyric}</text>
                   </lyric>
                   `
-                : `
+                  : `
                   <rest/>
                   <duration>${note.duration}</duration>
                   <voice>1</voice>
                   <type>${note.type}</type>
                   `
-            }
+                }
           </note>`
-        )
-        .join("")}
+            )
+            .join("")}
     </measure>`
-    )
-    .join("")}
+      )
+      .join("")}
   </part>
 </score-partwise>`
 }
