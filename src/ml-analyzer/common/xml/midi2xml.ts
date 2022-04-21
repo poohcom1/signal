@@ -134,7 +134,7 @@ export function eventsToXML(
 
   return createTemplate(
     [{
-      type: NoteLength.NOTE_TYPE_WHOLE,
+      type: NoteLength.NOTE_TYPE_QUARTER,
       duration: 1
     }, 
     ...notesToXMLNotes(noteEvents, lyrics),

@@ -13,6 +13,8 @@ import {
 } from "../../../actions/lyrics"
 import LyricSyllable from "./LyricSyllable"
 
+const ALLOW_STACKED = false
+
 export interface PianoVelocityControlProps {
   width: number
   height: number

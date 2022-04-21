@@ -5,7 +5,7 @@ import { NoteEvent, TrackEvent } from "../../../src/common/track"
 import { isNoteEvent } from "../../common/track/identify"
 import RootStore from "../../main/stores/RootStore"
 import { convertMidi } from "../adapters/adapter"
-import { eventsToMidi } from "../common/midi/customMidiConversion"
+import { chunkToMidi, eventsToMidi } from "../common/midi/customMidiConversion"
 import { eventsToXML } from "../common/xml/midi2xml"
 import MLTrack from "./MLTrack"
 
@@ -18,12 +18,17 @@ export enum FetchState {
 }
 
 export default class Chunk {
+  public trackId: number = 0
+
   public notes: NoteEvent[] = []
   public lyrics: LyricsEvent[] = []
   public startTick: number = -1
   public duration: number = -1
   public audioSrc: string = ""
   public state: FetchState = FetchState.UnFetched
+
+  // TODO IMPLEMENT THIS!!!!!
+  public offset: number = 0.5
 
   private _mlTrack: MLTrack
   private _audio: HTMLAudioElement
@@ -110,7 +115,7 @@ export default class Chunk {
 
       switch (this._mlTrack.modelFormat) {
         case "midi":
-          bytes = eventsToMidi(this.notes, rootStore.song.timebase)
+          bytes = chunkToMidi(rootStore)(this._mlTrack.trackId, this.startTick, this.endTick)
           blob = new Blob([bytes], { type: "application/octet-stream" })
           break
         case "musicxml":

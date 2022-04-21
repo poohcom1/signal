@@ -62,7 +62,7 @@ function createTrackAnalyzer(
     }
   )
 
-  return new MLTrack(disposer)
+  return new MLTrack(disposer, id)
 }
 
 export default class MLTracksStore {

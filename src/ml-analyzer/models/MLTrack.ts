@@ -10,11 +10,15 @@ export default class MLTrack {
   public modelFormat: "midi" | "musicxml" = "midi"
   public modelOptions: Record<string, string | boolean | number> = {}
 
-  constructor(disposer: IReactionDisposer) {
+  public readonly trackId
+
+  constructor(disposer: IReactionDisposer, trackId: number) {
     this.disposer = disposer
+    this.trackId = trackId
 
     makeObservable(this, {
       chunks: observable.deep,
+      trackId: observable
     })
   }
 
