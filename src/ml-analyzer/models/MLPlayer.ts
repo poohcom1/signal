@@ -1,17 +1,21 @@
 import Player from "../../common/player/Player"
 import TrackMute from "../../common/trackMute"
 import { SynthOutput } from "../../main/services/SynthOutput"
+import RootStore from "../../main/stores/RootStore"
 import { SongStore } from "../../main/stores/SongStore"
 import MLTracksStore from "../stores/MLTracksStore"
 
 export default class MLPlayer extends Player {
   public mlTrackStore: MLTracksStore | null = null
+  private songStore
 
   constructor(output: SynthOutput,
     metronomeOutput: SynthOutput,
     trackMute: TrackMute,
     songStore: SongStore) {
     super(output, metronomeOutput, trackMute, songStore)
+
+    this.songStore = songStore
   }
 
   public play(): void {
@@ -19,11 +23,14 @@ export default class MLPlayer extends Player {
 
     if (!this.mlTrackStore) return
 
-
     let allChunks = this.mlTrackStore.getChunks()
 
     for (const chunk of allChunks) {
-      chunk.play(this.position, this.tickToMillisec.bind(this))
+      chunk.play(
+        this.position,
+        (this.songStore as RootStore).pianoRollStore.currentTempo ?? 120,
+        this.tickToMillisec.bind(this)
+      )
     }
   }
 

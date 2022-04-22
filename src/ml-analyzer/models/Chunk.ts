@@ -5,7 +5,7 @@ import { NoteEvent, TrackEvent } from "../../../src/common/track"
 import { isNoteEvent } from "../../common/track/identify"
 import RootStore from "../../main/stores/RootStore"
 import { convertMidi } from "../adapters/adapter"
-import { chunkToMidi, eventsToMidi } from "../common/midi/customMidiConversion"
+import { chunkToMidi } from "../common/midi/customMidiConversion"
 import { eventsToXML } from "../common/xml/midi2xml"
 import MLTrack from "./MLTrack"
 
@@ -83,7 +83,7 @@ export default class Chunk {
   // Methods
   public delayedConvert(
     rootStore: RootStore,
-    onUpdate: (state: FetchState) => void = () => { },
+    onUpdate: (state: FetchState) => void = () => {},
     timeout: number = 3000
   ) {
     if (this._convertTimeout) {
@@ -99,7 +99,7 @@ export default class Chunk {
 
   private convertMidiToAudio(
     rootStore: RootStore,
-    onUpdate: (state: FetchState) => void = () => { }
+    onUpdate: (state: FetchState) => void = () => {}
   ) {
     if (this.state !== FetchState.Fetching && this.audioSrc === "") {
       this._error = null
@@ -112,7 +112,12 @@ export default class Chunk {
 
       switch (this._mlTrack.modelFormat) {
         case "midi":
-          bytes = chunkToMidi(rootStore)(this._mlTrack.trackId, this.startTick, this.endTick, this._mlTrack.modelManifest)
+          bytes = chunkToMidi(rootStore)(
+            this._mlTrack.trackId,
+            this.startTick,
+            this.endTick,
+            this._mlTrack.modelManifest
+          )
           blob = new Blob([bytes], { type: "application/octet-stream" })
           break
         case "musicxml":
@@ -127,8 +132,13 @@ export default class Chunk {
 
       const { signal } = this._fetchController
 
-
-      convertMidi(blob, rootStore.pianoRollStore.currentTempo ?? 120, signal, this._mlTrack.model, this._mlTrack.modelOptions)
+      convertMidi(
+        blob,
+        rootStore.pianoRollStore.currentTempo ?? 120,
+        signal,
+        this._mlTrack.model,
+        this._mlTrack.modelOptions
+      )
         .then((res) => {
           if (res.ok) {
             return res.blob()
@@ -161,7 +171,10 @@ export default class Chunk {
     }
   }
 
-  public play(position: number, tickToMillisec: CallableFunction) {
+  public bpm = 0
+
+  public play(position: number, bpm: number, tickToMillisec: CallableFunction) {
+    this.bpm = bpm
     if (this.audioSrc) {
       if (
         position >= this.startTick &&
@@ -183,8 +196,14 @@ export default class Chunk {
   }
 
   private playAudio(time: number = 0) {
+    let offset = 0
+
+    if ("trimStart" in this._mlTrack.modelManifest) {
+      offset = (60 / this.bpm) * this._mlTrack.modelManifest.trimStart
+    }
+
     this._audio.src = this.audioSrc
-    this._audio.currentTime = time
+    this._audio.currentTime = time + offset
     this._audio.play().then().catch(console.log)
   }
 
@@ -222,7 +241,7 @@ export default class Chunk {
     )
   }
 
-  public equal(other: Chunk) { }
+  public equal(other: Chunk) {}
 
   /**
    * Aborts pending fetch and free whatever is required
