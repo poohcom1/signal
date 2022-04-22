@@ -1,6 +1,6 @@
 import { Config, ModelsData } from "../stores/MLRootStore"
 
-const BACKEND_URL = "http://localhost:5000" // "http://192.168.1.40:5000"
+const BACKEND_URL = process.env.REACT_APP_BACKEND ?? "http://localhost:5000"
 
 export function convertMidi(
   blob: Blob,
@@ -25,6 +25,8 @@ export function convertMidi(
 
 
 export async function getModels(): Promise<Result<ModelsData>> {
+  console.log(BACKEND_URL)
+
   try {
     const res = await fetch(`${BACKEND_URL}/models`, { method: "GET" })
 

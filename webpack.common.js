@@ -45,5 +45,8 @@ module.exports = {
       chunks: ["browserLanding"],
       template: path.join(__dirname, "public", "index.html"),
     }),
+    new webpack.DefinePlugin({
+      process: { env: {} },
+    }),
   ],
 }
