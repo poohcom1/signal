@@ -43,7 +43,8 @@ export function eventsToMidi(
   return writeMidiFile([toRawEvents(conductorTrack.events), rawEvents], timebase)
 }
 
-export const chunkToMidi = (rootStore: RootStore) => (trackId: number, startTick: number, endTick: number): Uint8Array => {
+export const chunkToMidi = (rootStore: RootStore) => 
+  (trackId: number, startTick: number, endTick: number, modelManifest: Record<string, any>): Uint8Array => {
   const track = toJS(rootStore.song.tracks[trackId])
 
   if (track === undefined) {
@@ -51,7 +52,6 @@ export const chunkToMidi = (rootStore: RootStore) => (trackId: number, startTick
 
     return new Uint8Array()
   }
-
 
   const rawTracks = [track].map((t) => {
     const events = t.events.map(e => ({ ...e })).filter((e: TrackEvent) => {
@@ -63,6 +63,20 @@ export const chunkToMidi = (rootStore: RootStore) => (trackId: number, startTick
           return false
         }
       } else if ((e.type === "channel") || (e.type === "meta" && e.subtype === "lyrics")) {
+        if (e.subtype === "lyrics" && "lyricsMap" in modelManifest) {
+          let found = false
+          for (const [asciiLyrics, lyrics] of Object.entries(modelManifest.lyricsMap as Record<string, string[]>)) {
+            if (lyrics.includes(e.text)) {
+              e.text = asciiLyrics
+              found = true
+              break
+            }
+          }
+
+          if (!found && "_default" in modelManifest.lyricsMap)
+            e.text = modelManifest.lyricsMap._default[0]
+        }
+
         if (e.tick >= startTick && e.tick <= endTick) {
           e.tick -= startTick
 

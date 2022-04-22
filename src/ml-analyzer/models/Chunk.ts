@@ -27,9 +27,6 @@ export default class Chunk {
   public audioSrc: string = ""
   public state: FetchState = FetchState.UnFetched
 
-  // TODO IMPLEMENT THIS!!!!!
-  public offset: number = 0.5
-
   private _mlTrack: MLTrack
   private _audio: HTMLAudioElement
   private _velocityCache: number[] = []
@@ -115,7 +112,7 @@ export default class Chunk {
 
       switch (this._mlTrack.modelFormat) {
         case "midi":
-          bytes = chunkToMidi(rootStore)(this._mlTrack.trackId, this.startTick, this.endTick)
+          bytes = chunkToMidi(rootStore)(this._mlTrack.trackId, this.startTick, this.endTick, this._mlTrack.modelManifest)
           blob = new Blob([bytes], { type: "application/octet-stream" })
           break
         case "musicxml":

@@ -110,6 +110,7 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(
             mlRootViewStore.settingTrackId
           )
           track.model = model
+          track.modelManifest = modelData[model]
           track.modelFormat = modelData[model].format
           track.modelOptions = modelConfigs[model]
         } else {
