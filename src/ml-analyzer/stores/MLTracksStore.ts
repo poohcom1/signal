@@ -71,18 +71,17 @@ function createTrackAnalyzer(
 
 export default class MLTracksStore {
   public mlTracks: Array<MLTrack | undefined> = [undefined] // undefined tracks represent regular tracks
-  public changeFlag: boolean = false // Very hacky way to forward changes, but probably more optimized than just observing the entire mlTrackMap
+  public _changeFlag: boolean = false // Very hacky way to forward changes, but probably more optimized than just observing the entire mlTrackMap
 
   constructor() {
     makeObservable(this, {
       mlTracks: observable.deep,
-      changeFlag: observable,
+      _changeFlag: observable,
     })
   }
 
   onTrackAdded(rootStore: MLRootStore, trackId: number) {
-    rootStore.mlRootViewStore.settingTrackId = trackId
-    rootStore.mlRootViewStore.openTrackSettings = true
+    rootStore.mlRootViewStore.openTrackSettings(trackId, "create")
   }
 
   addTrack(rootStore: MLRootStore, trackId: number) {
@@ -152,6 +151,6 @@ export default class MLTracksStore {
   }
 
   triggerChange() {
-    this.changeFlag = !this.changeFlag
+    this._changeFlag = !this._changeFlag
   }
 }

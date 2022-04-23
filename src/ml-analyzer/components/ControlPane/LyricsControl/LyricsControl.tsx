@@ -45,8 +45,29 @@ const LyricsControl: FC<PianoVelocityControlProps> = observer(
 
     clearDanglingLyrics(rootStore)()
 
+    let defaultLyrics = ""
+    let lyricsMap: Record<string, string[]> | undefined = undefined
+
+    const mlStore = rootStore as MLRootStore
+
+    const track = mlStore.mlTrackStore.get(mlStore.song.selectedTrackId)
+
+
+    if (track) {
+      lyricsMap = track.modelManifest.lyricsMap
+
+      if (lyricsMap && "_default" in lyricsMap) {
+        defaultLyrics = lyricsMap._default as unknown as string
+      }
+    }
+
+
+
     const lyricNotes = windowedEvents.filter(isNoteEvent).map((note) => {
-      const lyric = getOrAddLyric(rootStore)(note) as TrackLyricsEvent
+      const lyric = getOrAddLyric(rootStore)(
+        note,
+        defaultLyrics
+      ) as TrackLyricsEvent
 
       return {
         noteId: note.id,
@@ -78,15 +99,6 @@ const LyricsControl: FC<PianoVelocityControlProps> = observer(
           overlaps[i].y = i * overlaps[i].height
         }
       }
-    }
-
-    let lyricsMap: Record<string, string[]> | undefined = undefined
-
-    const mlStore = rootStore as MLRootStore
-
-    const track = mlStore.mlTrackStore.get(mlStore.song.selectedTrackId)
-    if (track) {
-      lyricsMap = track.modelManifest.lyricsMap
     }
 
     return (

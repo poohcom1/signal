@@ -1,6 +1,6 @@
 import { IReactionDisposer, makeObservable, observable } from "mobx"
 import MLRootStore from "../stores/MLRootStore"
-import Chunk, { FetchState } from "./Chunk"
+import Chunk from "./Chunk"
 
 export default class MLTrack {
   public disposer: IReactionDisposer
@@ -9,7 +9,6 @@ export default class MLTrack {
   // ML Data
   public model: string = ""
   public modelManifest: Record<string, any> = {}
-  public modelFormat: "midi" | "musicxml" = "midi"
   public modelOptions: Record<string, string | boolean | number> = {}
 
   public readonly trackId
@@ -24,16 +23,41 @@ export default class MLTrack {
     })
   }
 
+  setModel(
+    model: string,
+    modelManifest: Record<string, any>,
+    modelOptions: Record<string, string | boolean | number>
+  ) {
+    this.model = model
+    this.modelManifest = modelManifest
+    this.modelOptions = modelOptions
+  }
+
+  get modelFormat(): "midi" | "musicxml" {
+    return this.modelManifest.modelFormat
+  }
+
+  hasMidiParam(param: string) {
+    return this.modelManifest.midiParameters?.includes(param)
+  }
+
   reset(rootStore: MLRootStore) {
-    this.chunks.forEach((c) => {
+    this.chunks = this.chunks.map((c) => {
+      const chunk = new Chunk(c.notes, c.meta, this)
+      chunk.startTick = c.startTick
+      chunk.duration = c.duration
+      return chunk
+    })
+
+    this.chunks.forEach((c) =>
       c.delayedConvert(
         rootStore,
-        (_state: FetchState) => {
-          rootStore.mlTrackStore.triggerChange()
-        },
+        () => rootStore.mlTrackStore.triggerChange(),
         1000
       )
-    })
+    )
+
+    rootStore.mlTrackStore.triggerChange()
   }
 
   /**

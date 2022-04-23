@@ -53,7 +53,7 @@ export const chunkToMidi = (rootStore: RootStore) =>
     return new Uint8Array()
   }
 
-  const rawTracks = [rootStore.song.conductorTrack!, track].map((t) => {
+  const rawTracks = [track].map((t) => {
     const events = t.events.map(e => ({ ...e })).filter((e: TrackEvent) => {
       if (e.type === "channel" && e.subtype === "note") {
         if (e.tick >= startTick && e.tick + e.duration <= endTick) {

@@ -304,7 +304,7 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
       song.selectedTrack?.events.length, // on new note
       song.tracks.length, // on new track
       song.selectedTrackId, // on track selected
-      mlTrackStore.changeFlag, // on force updates
+      mlTrackStore._changeFlag, // on force updates
       // end
     ]
   )

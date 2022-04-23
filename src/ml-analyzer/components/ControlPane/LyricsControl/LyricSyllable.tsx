@@ -18,42 +18,11 @@ interface IState {
   text: string
 }
 
-interface SyllableDivProps extends Partial<IProps> {
-  display: boolean
-}
-
-const SyllableDiv = styled.button<SyllableDivProps>`
-  margin: 0;
-  width: ${(props) => props.width}px;
-  position: absolute;
-  left: ${(props) => props.x}px;
-  top: ${(props) => props.y}px;
-  display: ${(props) => (props.display ? "block" : "none")};
-
-  font-size: 20px;
-  padding-left: 5px;
-
-  color: white;
-  background-color: transparent;
-  border: none;
-  outline: none;
-
-  &:hover {
-    background-color: rgb(0, 0, 0, 0.5);
-  }
-`
-
-const SyllableEdit = styled(TextField)<SyllableDivProps>`
+const SyllableEdit = styled(TextField)<Partial<IProps>>`
   margin: 0;
   position: absolute;
   left: ${(props) => props.x}px;
   top: ${(props) => props.y}px;
-  display: ${(props) => (props.display ? "block" : "none")};
-  background-color: transparent;
-
-  color: white;
-  outline: none;
-  border: none;
 
   font-size: 20px;
 `
@@ -66,7 +35,7 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
 
     this.state = {
       editing: false,
-      text: this.props.lyric ?? "",
+      text: props.lyric ?? "",
     }
 
     this._inputRef = React.createRef()
@@ -114,17 +83,25 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
                 )
               : []
           }
+          onChange={(e, value, reason) => {
+            if (reason === "clear") {
+              this.setState({ text: "" })
+            }
+            this.handleChange(value ?? "")
+          }}
+          onInputChange={(e, value) => this.handleChange(value)}
+          inputValue={this.state.text}
           renderInput={(params) => (
             <SyllableEdit
               {...params}
+              style={{
+                width: this.props.width,
+              }}
               variant="standard"
-              style={{ width: this.props.width }}
               ref={this._inputRef}
               x={this.props.x}
               y={this.props.y}
               width={this.props.width}
-              display={true}
-              value={this.state.text}
               onKeyDown={(ke) => {
                 if (ke.key === "Enter") {
                   this.handleSubmit()
@@ -133,7 +110,7 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
               }}
               onFocus={(e) => e.target.select()}
               onBlur={() => this.handleSubmit()}
-              onChange={(e) => this.handleChange(e.target.value)}
+              placeholder="⚠️"
             />
           )}
         />

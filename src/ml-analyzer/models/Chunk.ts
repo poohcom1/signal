@@ -7,7 +7,6 @@ import RootStore from "../../main/stores/RootStore"
 import { isLyricsEvent } from "../actions/lyrics"
 import { convertMidi } from "../adapters/adapter"
 import { chunkToMidi } from "../common/midi/customMidiConversion"
-import { eventsToXML } from "../common/xml/midi2xml"
 import MLTrack from "./MLTrack"
 
 export enum FetchState {
@@ -85,6 +84,26 @@ export default class Chunk {
     })
   }
 
+  private convertPrecheck(rootStore: RootStore) {
+    const track = rootStore.song.selectedTrack
+
+    if (track && this._mlTrack.hasMidiParam("lyrics")) {
+      const lyrics = track.events
+        .filter(isLyricsEvent)
+        .filter((e) => e.tick >= this.startTick && e.tick <= this.endTick)
+
+      if (lyrics.length === 0) {
+        return true
+      }
+
+      if (lyrics.map((l) => l.text).includes("")) {
+        return true
+      }
+    }
+
+    return false
+  }
+
   // Methods
   public delayedConvert(
     rootStore: RootStore,
@@ -103,22 +122,9 @@ export default class Chunk {
     }
 
     // Pre checks
-    const track = rootStore.song.selectedTrack
-
-    if (track && this._mlTrack.modelManifest.midiParameters) {
-      for (const param of this._mlTrack.modelManifest.midiParameters) {
-        switch (param) {
-          case "lyrics":
-            const lyrics = track.events
-              .filter(isLyricsEvent)
-              .filter((e) => e.tick >= this.startTick && e.tick <= this.endTick)
-
-            if (lyrics.map((l) => l.text).includes("")) {
-              this.state = FetchState.NeedData
-              return
-            }
-        }
-      }
+    if (this.convertPrecheck(rootStore)) {
+      this.state = FetchState.NeedData
+      return
     }
 
     // Start timeout
@@ -133,34 +139,25 @@ export default class Chunk {
     rootStore: RootStore,
     onUpdate: (state: FetchState) => void = () => {}
   ) {
+    if (this.convertPrecheck(rootStore)) {
+      this.state = FetchState.NeedData
+      onUpdate(this.state)
+      return
+    }
+
     if (this.state !== FetchState.Fetching && this.audioSrc === "") {
       this._error = null
 
       this.state = FetchState.Fetching
       onUpdate(this.state)
 
-      let bytes = new Uint8Array()
-      let blob = new Blob()
-
-      switch (this._mlTrack.modelFormat) {
-        case "midi":
-          bytes = chunkToMidi(rootStore)(
-            this._mlTrack.trackId,
-            this.startTick,
-            this.endTick,
-            this._mlTrack.modelManifest
-          )
-          blob = new Blob([bytes], { type: "application/octet-stream" })
-          break
-        case "musicxml":
-          const xmlString = eventsToXML(this.notes, rootStore)
-          if (!xmlString) {
-            console.error("Selected track is null")
-            return
-          }
-          blob = new Blob([xmlString], { type: "text/plain" })
-          break
-      }
+      const bytes = chunkToMidi(rootStore)(
+        this._mlTrack.trackId,
+        this.startTick,
+        this.endTick,
+        this._mlTrack.modelManifest
+      )
+      const blob = new Blob([bytes], { type: "application/octet-stream" })
 
       const { signal } = this._fetchController
 
@@ -274,8 +271,6 @@ export default class Chunk {
       ) + JSON.stringify(this.meta)
     )
   }
-
-  public equal(other: Chunk) {}
 
   /**
    * Aborts pending fetch and free whatever is required

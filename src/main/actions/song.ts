@@ -100,6 +100,14 @@ export const removeTrack = (rootStore: RootStore) => (trackId: number) => {
 export const selectTrack = (rootStore: RootStore) => (trackId: number) => {
   const { song } = rootStore
   song.selectTrack(trackId)
+
+  // @signal-ml
+  if (
+    (rootStore as MLRootStore).mlTrackStore
+      .get(trackId)
+      ?.hasMidiParam("lyrics")
+  )
+    rootStore.pianoRollStore.controlMode = "lyrics"
 }
 
 export const insertTrack = (rootStore: RootStore) => (trackId: number) => {

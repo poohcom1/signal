@@ -1,13 +1,25 @@
 import { makeObservable, observable } from "mobx"
 
 export default class MLRootViewStore {
-  openTrackSettings = false
-  settingTrackId = -1
+  trackSettingsOpened = false
+  trackSettingMode: "create" | "edit" = "create"
+  trackSettingsId = -1
 
   constructor() {
     makeObservable(this, {
-      openTrackSettings: observable,
-      settingTrackId: observable,
+      trackSettingsOpened: observable,
+      trackSettingsId: observable,
+      trackSettingMode: observable,
     })
+  }
+
+  openTrackSettings(trackId: number, mode: "create" | "edit") {
+    this.trackSettingsId = trackId
+    this.trackSettingsOpened = true
+    this.trackSettingMode = mode
+  }
+
+  closeTrackSettings() {
+    this.trackSettingsOpened = false
   }
 }

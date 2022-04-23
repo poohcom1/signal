@@ -1,6 +1,9 @@
 import styled from "@emotion/styled"
+import { Settings } from "@mui/icons-material"
+import Button from "@mui/material/Button"
 import { observer } from "mobx-react-lite"
 import React, { FC, useCallback } from "react"
+import MLRootStore from "../../../ml-analyzer/stores/MLRootStore"
 import { useStores } from "../../hooks/useStores"
 import InstrumentBrowser from "../InstrumentBrowser/InstrumentBrowser"
 import { AutoScrollButton } from "../Toolbar/AutoScrollButton"
@@ -23,7 +26,9 @@ const FlexibleSpacer = styled.div`
 `
 
 export const PianoRollToolbar: FC = observer(() => {
-  const { song, pianoRollStore } = useStores()
+  // @signal-ml
+  const { song, pianoRollStore, mlTrackStore, mlRootViewStore } =
+    useStores() as MLRootStore
 
   const { selectedTrack, selectedTrackId } = song
   const { quantize, autoScroll, isQuantizeEnabled } = pianoRollStore
@@ -65,6 +70,19 @@ export const PianoRollToolbar: FC = observer(() => {
       <PanSlider trackId={selectedTrackId} />
 
       <FlexibleSpacer />
+
+      {mlTrackStore.has(selectedTrackId) ? (
+        <Button
+          onClick={() => {
+            mlRootViewStore.openTrackSettings(selectedTrackId, "edit")
+          }}
+        >
+          <Settings />
+          Model Settings
+        </Button>
+      ) : (
+        <></>
+      )}
 
       <PianoRollToolSelector />
 
