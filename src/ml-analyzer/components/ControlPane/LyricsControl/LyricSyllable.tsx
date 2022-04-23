@@ -84,6 +84,14 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
     setTimeout(() => this._inputRef.current?.focus(), 10)
   }
 
+  handleChange(text: string) {
+    this.setState({ text })
+    setTimeout(
+      () => this.props.setLyric(this.props.noteId, this.state.text),
+      100
+    )
+  }
+
   handleSubmit() {
     this.props.setLyric(this.props.noteId, this.state.text)
     this.setState({ editing: false })
@@ -103,11 +111,12 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
           onKeyDown={(ke) => {
             if (ke.key === "Enter") {
               this.handleSubmit()
+              this._inputRef.current?.blur()
             }
           }}
           onFocus={(e) => e.target.select()}
           onBlur={() => this.handleSubmit()}
-          onChange={(e) => this.setState({ text: e.target.value })}
+          onChange={(e) => this.handleChange(e.target.value)}
           placeholder="_"
         />
       </>

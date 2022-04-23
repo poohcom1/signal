@@ -1,6 +1,7 @@
 import { LyricsEvent } from "midifile-ts"
 import { toTrackEvents } from "../../common/helpers/toTrackEvents"
-import { NoteEvent, TrackEvent } from "../../common/track"
+import track, { NoteEvent, TrackEvent } from "../../common/track"
+import { pushHistory } from "../../main/actions/history"
 import RootStore from "../../main/stores/RootStore"
 
 interface MetaEvent {
@@ -20,46 +21,49 @@ export function isLyricsEvent(event: TrackEvent): event is TrackLyricsEvent {
  */
 export const getOrAddLyric =
   (rootStore: RootStore) =>
-    (note: NoteEvent, defaultLyrics = ""): TrackLyricsEvent => {
-      const selectedTrack = rootStore.song.selectedTrack!
+  (note: NoteEvent, defaultLyrics = ""): TrackLyricsEvent => {
+    const selectedTrack = rootStore.song.selectedTrack!
 
-      const lyricEvents = selectedTrack.events.filter(isLyricsEvent)
+    const lyricEvents = selectedTrack.events.filter(isLyricsEvent)
 
-      const lyric = lyricEvents.find((e) => e.noteId === note.id)
+    const lyric = lyricEvents.find((e) => e.noteId === note.id)
 
-      if (lyric) {
-        lyric.tick = note.tick
+    if (lyric) {
+      lyric.tick = note.tick
 
-        return lyric
-      } else {
-        const lyricEvent: LyricsEvent = {
-          type: "meta",
-          subtype: "lyrics",
-          text: defaultLyrics,
-          deltaTime: note.tick,
-        }
-
-        const trackLyricEvent = toTrackEvents([lyricEvent])[0];
-
-        (trackLyricEvent as unknown as TrackLyricsEvent).noteId = note.id
-
-        selectedTrack.addEvents([trackLyricEvent])
-
-        return trackLyricEvent as unknown as TrackLyricsEvent
-      }
-    }
-
-export const findMatchingLyrics = (lyricEvents: TrackLyricsEvent[], note: NoteEvent): TrackLyricsEvent => {
-      const lyric = lyricEvents.find((e) => e.noteId === note.id)
-
-      if (lyric) {
-        lyric.tick = note.tick
-
-        return lyric
+      return lyric
+    } else {
+      const lyricEvent: LyricsEvent = {
+        type: "meta",
+        subtype: "lyrics",
+        text: defaultLyrics,
+        deltaTime: note.tick,
       }
 
-      return {} as unknown as TrackLyricsEvent
+      const trackLyricEvent = toTrackEvents([lyricEvent])[0]
+
+      ;(trackLyricEvent as unknown as TrackLyricsEvent).noteId = note.id
+
+      selectedTrack.addEvents([trackLyricEvent])
+
+      return trackLyricEvent as unknown as TrackLyricsEvent
     }
+  }
+
+export const findMatchingLyrics = (
+  lyricEvents: TrackLyricsEvent[],
+  note: NoteEvent
+): TrackLyricsEvent => {
+  const lyric = lyricEvents.find((e) => e.noteId === note.id)
+
+  if (lyric) {
+    lyric.tick = note.tick
+
+    return lyric
+  }
+
+  return {} as unknown as TrackLyricsEvent
+}
 
 export const setLyric =
   (rootStore: RootStore) => (noteId: number, lyric: string) => {
@@ -69,8 +73,15 @@ export const setLyric =
       .filter(isLyricsEvent)
       .find((lyricE) => lyricE.noteId === noteId)
 
-    if (lyricEvent) lyricEvent.text = lyric
-    else console.warn("actions/lyrics: Lyric event not found")
+    if (lyricEvent) {
+      pushHistory(rootStore)()
+      selectedTrack.transaction(t => {
+        t.removeEvent(lyricEvent.id)
+
+        const newLyric = {...lyricEvent, text: lyric}
+        t.addEvent(newLyric)
+      })
+    } else console.warn("actions/lyrics: Lyric event not found")
   }
 
 export const clearDanglingLyrics = (rootStore: RootStore) => () => {

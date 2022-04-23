@@ -1,9 +1,10 @@
 import { clone } from "lodash"
-import { LyricsEvent } from "midifile-ts"
+import { AnyEvent, LyricsEvent } from "midifile-ts"
 import { makeObservable, observable } from "mobx"
 import { NoteEvent, TrackEvent } from "../../../src/common/track"
 import { isNoteEvent } from "../../common/track/identify"
 import RootStore from "../../main/stores/RootStore"
+import { isLyricsEvent } from "../actions/lyrics"
 import { convertMidi } from "../adapters/adapter"
 import { chunkToMidi } from "../common/midi/customMidiConversion"
 import { eventsToXML } from "../common/xml/midi2xml"
@@ -15,12 +16,14 @@ export enum FetchState {
   Fetching,
   Fetched,
   Error,
+  NeedData,
 }
 
 export default class Chunk {
   public trackId: number = 0
 
   public notes: NoteEvent[] = []
+  public meta: AnyEvent[] = []
   public lyrics: LyricsEvent[] = []
   public startTick: number = -1
   public duration: number = -1
@@ -41,10 +44,12 @@ export default class Chunk {
 
   constructor(
     notes: NoteEvent[],
+    meta: AnyEvent[],
     track: MLTrack,
     audio: HTMLAudioElement | undefined = undefined
   ) {
     this._mlTrack = track
+    this.meta = meta
 
     // Conditionally set to allow testing without DOM
     if (audio) {
@@ -90,6 +95,27 @@ export default class Chunk {
       clearTimeout(this._convertTimeout)
     }
 
+    // Pre checks
+    const track = rootStore.song.selectedTrack
+
+    if (track && this._mlTrack.modelManifest.midiParameters) {
+      for (const param of this._mlTrack.modelManifest.midiParameters) {
+        switch (param) {
+          case "lyrics":
+            const lyrics = track.events
+              .filter(isLyricsEvent)
+              .filter((e) => e.tick >= this.startTick && e.tick <= this.endTick)
+
+            if (lyrics.map((l) => l.text).includes("")) {
+              this.state = FetchState.NeedData
+              return
+            }
+            
+        }
+      }
+    }
+
+    // Start timeout
     this.state = FetchState.Prefetch
 
     this._convertTimeout = setTimeout(() => {
@@ -236,8 +262,10 @@ export default class Chunk {
   }
 
   public hash() {
-    return JSON.stringify(
-      this.notes.map((note) => [note.tick, note.noteNumber, note.duration])
+    return (
+      JSON.stringify(
+        this.notes.map((note) => [note.tick, note.noteNumber, note.duration])
+      ) + JSON.stringify(this.meta)
     )
   }
 
@@ -338,6 +366,7 @@ export default class Chunk {
       }
     }
 
+    // Delete remaining chunks
     chunkHash.forEach((chunk, _id) => chunk.destroy())
 
     return newChunks

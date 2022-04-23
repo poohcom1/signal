@@ -122,6 +122,7 @@ function drawChunk(
     [FetchState.Fetching]: "rgba(238, 255, 0, 0.575)",
     [FetchState.Fetched]: "rgba(0, 255, 0, 0.575)",
     [FetchState.Error]: "rgba(255, 0, 0, 0.5)",
+    [FetchState.NeedData]: "rgba(255, 78, 7, 0.5)"
   }[chunk.state]
 
   ctx.beginPath()

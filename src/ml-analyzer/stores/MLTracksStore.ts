@@ -1,5 +1,6 @@
 import { pullAt } from "lodash"
 import { makeObservable, observable, reaction } from "mobx"
+import { isLyricsEvent } from "../actions/lyrics"
 import Chunk, { FetchState } from "../models/Chunk"
 import MLTrack from "../models/MLTrack"
 import MLRootStore from "./MLRootStore"
@@ -34,10 +35,13 @@ function createTrackAnalyzer(
 
       // Generate new chunks
       const noteEventsList = Chunk.splitNotes(events)
+      const metaEvents = []
       const newChunks = []
 
+      metaEvents.push(...events.filter(isLyricsEvent))
+
       for (const noteEvents of noteEventsList) {
-        newChunks.push(new Chunk(noteEvents, mlTrack))
+        newChunks.push(new Chunk(noteEvents, metaEvents, mlTrack))
       }
 
       // Compare and replace old chunks
@@ -48,7 +52,7 @@ function createTrackAnalyzer(
         )
 
         for (const chunk of mlTrack.chunks) {
-          if (chunk.state == FetchState.UnFetched) {
+          if (chunk.state == FetchState.UnFetched || chunk.state == FetchState.NeedData) {
             chunk.delayedConvert(
               rootStore,
               (_state: FetchState) => {
