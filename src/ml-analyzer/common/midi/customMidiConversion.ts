@@ -70,6 +70,8 @@ export const chunkToMidi = (rootStore: RootStore) =>
               e.text = asciiLyrics
               found = true
               break
+            } else if (e.text === asciiLyrics) {
+              found = true
             }
           }
 

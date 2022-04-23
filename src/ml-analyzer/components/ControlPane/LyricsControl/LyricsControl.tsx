@@ -11,9 +11,8 @@ import {
   setLyric,
   TrackLyricsEvent,
 } from "../../../actions/lyrics"
+import MLRootStore from "../../../stores/MLRootStore"
 import LyricSyllable from "./LyricSyllable"
-
-const ALLOW_STACKED = false
 
 export interface PianoVelocityControlProps {
   width: number
@@ -81,6 +80,15 @@ const LyricsControl: FC<PianoVelocityControlProps> = observer(
       }
     }
 
+    let lyricsMap: Record<string, string[]> | undefined = undefined
+
+    const mlStore = rootStore as MLRootStore
+
+    const track = mlStore.mlTrackStore.get(mlStore.song.selectedTrackId)
+    if (track) {
+      lyricsMap = track.modelManifest.lyricsMap
+    }
+
     return (
       <Parent>
         <GraphAxis values={[]} onClick={() => {}} />
@@ -91,6 +99,7 @@ const LyricsControl: FC<PianoVelocityControlProps> = observer(
                 key={item.noteId}
                 {...item}
                 setLyric={setLyric(rootStore)}
+                lyricsMap={lyricsMap}
               />
             )
           })}

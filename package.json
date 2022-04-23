@@ -31,6 +31,7 @@
     "@sentry/react": "^6.17.7",
     "@sentry/tracing": "^6.17.7",
     "color": "^4.2.1",
+    "dotenv-webpack": "^7.1.0",
     "gl-matrix": "^3.4.3",
     "lodash": "^4.17.21",
     "mdi-react": "^8.2.0",

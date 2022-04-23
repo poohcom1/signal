@@ -1,5 +1,6 @@
 import { IReactionDisposer, makeObservable, observable } from "mobx"
-import Chunk from "./Chunk"
+import MLRootStore from "../stores/MLRootStore"
+import Chunk, { FetchState } from "./Chunk"
 
 export default class MLTrack {
   public disposer: IReactionDisposer
@@ -19,7 +20,19 @@ export default class MLTrack {
 
     makeObservable(this, {
       chunks: observable.deep,
-      trackId: observable
+      trackId: observable,
+    })
+  }
+
+  reset(rootStore: MLRootStore) {
+    this.chunks.forEach((c) => {
+      c.delayedConvert(
+        rootStore,
+        (_state: FetchState) => {
+          rootStore.mlTrackStore.triggerChange()
+        },
+        0
+      )
     })
   }
 

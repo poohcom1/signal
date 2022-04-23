@@ -1,4 +1,5 @@
 import styled from "@emotion/styled"
+import { Autocomplete, TextField } from "@mui/material"
 import React from "react"
 
 interface IProps {
@@ -8,6 +9,8 @@ interface IProps {
   noteId: number
   lyric: string
   setLyric: (tick: number, lyric: string) => void
+
+  lyricsMap?: Record<string, string[]>
 }
 
 interface IState {
@@ -40,7 +43,7 @@ const SyllableDiv = styled.button<SyllableDivProps>`
   }
 `
 
-const SyllableEdit = styled.input<SyllableDivProps>`
+const SyllableEdit = styled(TextField)<SyllableDivProps>`
   margin: 0;
   position: absolute;
   left: ${(props) => props.x}px;
@@ -100,24 +103,39 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
   render() {
     return (
       <>
-        <SyllableEdit
-          style={{ width: this.props.width }}
-          ref={this._inputRef}
-          x={this.props.x}
-          y={this.props.y}
-          width={this.props.width}
-          display={true}
-          value={this.state.text}
-          onKeyDown={(ke) => {
-            if (ke.key === "Enter") {
-              this.handleSubmit()
-              this._inputRef.current?.blur()
-            }
-          }}
-          onFocus={(e) => e.target.select()}
-          onBlur={() => this.handleSubmit()}
-          onChange={(e) => this.handleChange(e.target.value)}
-          placeholder="_"
+        <Autocomplete
+          freeSolo
+          blurOnSelect
+          options={
+            this.props.lyricsMap
+              ? Object.values(this.props.lyricsMap).reduce(
+                  (pre, cur) => pre.concat(...cur),
+                  []
+                )
+              : []
+          }
+          renderInput={(params) => (
+            <SyllableEdit
+              {...params}
+              variant="standard"
+              style={{ width: this.props.width }}
+              ref={this._inputRef}
+              x={this.props.x}
+              y={this.props.y}
+              width={this.props.width}
+              display={true}
+              value={this.state.text}
+              onKeyDown={(ke) => {
+                if (ke.key === "Enter") {
+                  this.handleSubmit()
+                  this._inputRef.current?.blur()
+                }
+              }}
+              onFocus={(e) => e.target.select()}
+              onBlur={() => this.handleSubmit()}
+              onChange={(e) => this.handleChange(e.target.value)}
+            />
+          )}
         />
       </>
     )

@@ -1,6 +1,7 @@
 const path = require("path")
 const HtmlWebpackPlugin = require("html-webpack-plugin")
 const webpack = require("webpack")
+const Dotenv = require("dotenv-webpack")
 
 module.exports = {
   context: __dirname,
@@ -45,8 +46,8 @@ module.exports = {
       chunks: ["browserLanding"],
       template: path.join(__dirname, "public", "index.html"),
     }),
-    new webpack.DefinePlugin({
-      process: { env: {} },
+    new Dotenv({
+      systemvars: true,
     }),
   ],
 }
