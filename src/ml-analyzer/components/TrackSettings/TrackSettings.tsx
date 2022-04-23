@@ -1,15 +1,17 @@
 import {
   Box,
   Button,
-  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   Divider,
   FormControl,
   FormControlLabel,
+  FormGroup,
   InputLabel,
+  Link,
   MenuItem,
   Select,
   Slider,
@@ -268,19 +270,22 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(() => {
       <DialogTitle>{`Track #${mlRootViewStore.trackSettingsId} Settings`}</DialogTitle>
 
       <DialogContent>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={isRegularTrack}
-              onChange={(e) => {
-                setIsRegularTrack(e.target.checked)
-              }}
-              inputProps={{ "aria-label": "controlled" }}
-            />
-          }
-          label="Create regular track"
-        />
+        <FormGroup>
+          <FormControlLabel
+            control={
+              <Switch
+                defaultChecked
+                onChange={(e) => {
+                  setIsRegularTrack(!e.target.checked)
+                }}
+              />
+            }
+            label="Machine Learning Instrument"
+          />
+        </FormGroup>
+
         <div style={{ display: isRegularTrack ? "none" : "block" }}>
+          <h3>Choose a model:</h3>
           <FormControl variant="outlined" fullWidth>
             <InputLabel id="model-select">Model</InputLabel>
             <Select
@@ -300,7 +305,22 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(() => {
               )}
             </Select>
           </FormControl>
-
+          {modelData[model] ? (
+            <>
+              <DialogContentText>
+                {modelData[model].description ?? ""}
+              </DialogContentText>
+              {modelData[model].link ? (
+                <Link href={modelData[model].link} target="_blank">
+                  {modelData[model].link ?? ""}
+                </Link>
+              ) : (
+                <></>
+              )}
+            </>
+          ) : (
+            <></>
+          )}
           <div>
             <Divider style={{ marginTop: "16px" }}>{model} Configs</Divider>
             {/* Individual configs */}

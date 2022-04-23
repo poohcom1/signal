@@ -29,6 +29,7 @@ export type ModelsData = Record<string, {
   name: string
   format: "midi" | "musicxml"
   description: string
+  link: string
   parameters: Record<string, BooleanParam | StringParam | IntParam | FloatParam | EnumParam>
 }>
 

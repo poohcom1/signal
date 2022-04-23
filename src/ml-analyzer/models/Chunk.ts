@@ -1,5 +1,5 @@
 import { clone } from "lodash"
-import { AnyEvent, LyricsEvent } from "midifile-ts"
+import { AnyEvent, LyricsEvent, MetaEvent } from "midifile-ts"
 import { makeObservable, observable } from "mobx"
 import { NoteEvent, TrackEvent } from "../../../src/common/track"
 import { isNoteEvent } from "../../common/track/identify"
@@ -22,8 +22,7 @@ export default class Chunk {
   public trackId: number = 0
 
   public notes: NoteEvent[] = []
-  public meta: AnyEvent[] = []
-  public lyrics: LyricsEvent[] = []
+  public meta: TrackEvent[] = []
   public startTick: number = -1
   public duration: number = -1
   public audioSrc: string = ""
@@ -37,18 +36,20 @@ export default class Chunk {
   private _fetchController = new AbortController()
   private _error: Error | null = null
 
+  private _retries = 0
+  private readonly MAX_RETRIES = 5
+
   get endTick(): number {
     return this.startTick + this.duration
   }
 
   constructor(
     notes: NoteEvent[],
-    meta: AnyEvent[],
+    meta: TrackEvent[],
     track: MLTrack,
     audio: HTMLAudioElement | undefined = undefined
   ) {
     this._mlTrack = track
-    this.meta = meta
 
     // Conditionally set to allow testing without DOM
     if (audio) {
@@ -75,6 +76,10 @@ export default class Chunk {
     }
 
     this.duration = endTick - this.startTick
+
+    this.meta = meta.filter(
+      (e) => e.tick >= this.startTick && e.tick <= this.endTick
+    )
 
     makeObservable(this, {
       startTick: observable,
@@ -188,6 +193,9 @@ export default class Chunk {
           onUpdate(this.state)
           this._error = error
           console.error("Error ", this._error)
+
+          if (this._retries++ < this.MAX_RETRIES)
+            this.delayedConvert(rootStore, onUpdate, 100)
         })
     }
   }
