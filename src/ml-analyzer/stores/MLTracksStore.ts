@@ -70,9 +70,7 @@ function createTrackAnalyzer(
 }
 
 export default class MLTracksStore {
-
   public mlTracks: Array<MLTrack | undefined> = [undefined] // undefined tracks represent regular tracks
-
   public changeFlag: boolean = false // Very hacky way to forward changes, but probably more optimized than just observing the entire mlTrackMap
 
   constructor() {

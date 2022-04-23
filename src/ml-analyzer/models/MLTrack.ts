@@ -31,7 +31,7 @@ export default class MLTrack {
         (_state: FetchState) => {
           rootStore.mlTrackStore.triggerChange()
         },
-        0
+        1000
       )
     })
   }

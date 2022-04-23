@@ -91,8 +91,15 @@ export default class Chunk {
     onUpdate: (state: FetchState) => void = () => {},
     timeout: number = 3000
   ) {
+    this._fetchController = new AbortController()
+
     if (this._convertTimeout) {
       clearTimeout(this._convertTimeout)
+    }
+
+    if (this.audioSrc !== "") {
+      URL.revokeObjectURL(this.audioSrc)
+      this.audioSrc = ""
     }
 
     // Pre checks
@@ -110,7 +117,6 @@ export default class Chunk {
               this.state = FetchState.NeedData
               return
             }
-            
         }
       }
     }

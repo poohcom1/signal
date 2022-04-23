@@ -4,8 +4,6 @@ import MLPlayer from "../models/MLPlayer"
 import MLRootViewStore from "./MLRootViewStore"
 import MLTracksStore from "./MLTracksStore"
 
-
-
 interface ConfigParam<T extends string> {
   type: T,
   default: boolean | string | number
