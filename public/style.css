@@ -1,6 +1,6 @@
 :root {
-  --themeColor: #5a4edf;
-  --themeColor2: #4c41cc;
+  --themeColor: #482e7c;
+  --themeColor2: #322454;
 }
 body {
   margin: 0;
@@ -64,8 +64,8 @@ section .content {
   box-shadow: 0 1rem 8rem #0000004f;
 }
 #hero .text .description {
-  font-size: 1.4rem;
-  line-height: 1;
+  font-size: 1.2rem;
+  line-height: 1.2;
 }
 #launch-button {
   background: white;

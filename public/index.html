@@ -1,30 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="twitter:card" content="summary" />
-    <meta property="og:title" content="signal" />
-    <meta
-      property="og:description"
-      content="Fully Open-sourced Online MIDI Editor"
-    />
-    <meta
-      property="og:image"
-      content="https://signal.vercel.app/twitter-card.png"
-    />
-    <title>signal (ml) - Online MIDI Editor</title>
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&display=swap"
-      rel="stylesheet"
-    />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="twitter:card" content="summary" />
+  <meta property="og:title" content="signal" />
+  <meta property="og:description" content="Fully Open-sourced Online MIDI Editor" />
+  <meta property="og:image" content="https://signal.vercel.app/twitter-card.png" />
+  <title>signal (ml) - Online MIDI Editor</title>
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&display=swap" rel="stylesheet" />
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <!-- <script
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <!-- <script
       async
       src="https://www.googletagmanager.com/gtag/js?id=UA-179088031-1"
     ></script>
@@ -38,81 +30,86 @@
       gtag("config", "UA-179088031-1")
     </script> -->
 
-    <link rel="stylesheet" href="/style.css" />
-    <link rel="stylesheet" href="/carbon.css" />
-  </head>
-  <body>
-    <header>
-      <div class="content">
-        <a href="/" id="title"><img src="logo-white.svg" /></a>
-        <a href="https://github.com/poohcom1/signal-ml/" id="github-link">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
-            />
-          </svg>
-        </a>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/carbon.css" />
+</head>
+
+<body>
+  <header>
+    <div class="content">
+      <a href="/" id="title"><img src="logo-white.svg" /></a>
+      <a href="https://github.com/poohcom1/signal-ml/" id="github-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <path
+            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+        </svg>
+      </a>
+    </div>
+  </header>
+
+  <section id="hero">
+    <div class="content">
+      <div class="text">
+        <h1 data-i18n="app-intro">Experimental DAW for ML instruments</h1>
+        <p class="description" data-i18n="app-desc">
+          Virtual instruments created with machine learning has potential to create very interesting
+          and realistic sounds. However, they are usually in form of command line conversion tools,
+          where files are converted very slowly as the model converts the input parameters.
+        </p>
+        <p class="description" data-i18n="app-desc">
+          This DAW is designed with this limitation in mind, allowing the user to continue writing
+          notes as the midi data is being converted into audio data.
+        </p>
+        <p class="platform" data-i18n="platform">
+          *Currently, saving and loading audio is not supported.
+        </p>
+        <a href="edit" id="launch-button" data-i18n="launch">Launch</a>
+        <p class="platform" data-i18n="platform">
+          Supported desktop browsers: Google Chrome / Firefox / Safari
+        </p>
+
       </div>
-    </header>
-
-    <section id="hero">
-      <div class="content">
-        <div class="text">
-          <h1 data-i18n="app-intro">Experimental DAW for ML based virtual instruments</h1>
-          <p class="description" data-i18n="app-desc">
-            Test out instruments from ML research without the need to use the command line!
-          </p>
-          <a href="edit" id="launch-button" data-i18n="launch">Launch</a>
-          <p class="platform" data-i18n="platform">
-            Supported desktop browsers: Google Chrome / Firefox / Safari
-          </p>
-        </div>
-        <div class="image">
-          <img src="screenshot.png" alt="" />
-        </div>
+      <div class="image">
+        <img src="screenshot.png" alt="" />
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section id="features">
-      <div class="content">
-        <div class="left">
+  <section id="features">
+    <div class="content">
+      <div class="left">
 
-          <h3 data-i18n="features">Featured models:</h3>
+        <h3 data-i18n="features">Featured models:</h3>
 
-          <div class="feature" style="background: #91322c73">
-            <div class="icon" style="background: #e7372c">
-              <img src="/general-midi-logo.svg" />
-            </div>
-            <a href="https://github.com/rodrigo-castellon/midi2params" style="text-decoration: none; color: white">
-              <div class="title" data-i18n="feature-gm-module">
-                MIDI2PARAMS
-              </div>
-            </a>
-            <div class="description" data-i18n="feature-gm-module-description">
-              A violin model trained from only a few amateur violin recordings, synthesized with DDSP.
-            </div>
+        <div class="feature" style="background: #91322c73">
+          <div class="icon" style="background: #e7372c">
+            <img src="/general-midi-logo.svg" />
           </div>
-
-          <div class="feature" style="background: #3c2fd740">
-            <div class="icon" style="background: #3c2fd7">
-              <img src="https://n3utrino.work/wp-content/uploads/2021/02/logo_light-1920x480.png" style="width: 3rem" />
+          <a href="https://github.com/rodrigo-castellon/midi2params" style="text-decoration: none; color: white">
+            <div class="title" data-i18n="feature-gm-module">
+              MIDI2PARAMS
             </div>
-            <a href="https://n3utrino.work/" style="text-decoration: none; color: white">
-              <div class="title" data-i18n="feature-midi-file">
-                N3UTRINO
-              </div>
-            </a>
-            <div class="description" data-i18n="feature-midi-file-description">
-              A neural network singing synthesizer. 
-            </div>
+          </a>
+          <div class="description" data-i18n="feature-gm-module-description">
+            A violin model trained from only a few amateur violin recordings, synthesized with DDSP.
           </div>
+        </div>
 
-          <!-- <div class="feature" style="background: #ff99002f">
+        <div class="feature" style="background: #3c2fd740">
+          <div class="icon" style="background: #3c2fd7">
+            <img src="https://n3utrino.work/wp-content/uploads/2021/02/logo_light-1920x480.png" style="width: 3rem" />
+          </div>
+          <a href="https://n3utrino.work/" style="text-decoration: none; color: white">
+            <div class="title" data-i18n="feature-midi-file">
+              N3UTRINO
+            </div>
+          </a>
+          <div class="description" data-i18n="feature-midi-file-description">
+            A neural network singing synthesizer. Up to 10 different voices available.
+          </div>
+        </div>
+
+        <!-- <div class="feature" style="background: #ff99002f">
             <div class="icon" style="background: #ff9900">
               <img src="/wav-file.svg" />
             </div>
@@ -174,49 +171,44 @@
         <div class="right">
         </div>
       </div>
-    </section>
+  </section>
 
-    <section id="sponsor">
-      <div class="content">
-        <h3 data-i18n="become-sponsor">Go sponsor signal!</h3>
-        <p>This website is a fork of signal:</p>
-        <p class="sponsor-intro" data-i18n="sponsor-intro">
-          "signal is an application that I am personally building on weekends. If
-          you like the concept of a lightweight composition software that runs
-          in your browser, please support me."
-        </p>
+  <section id="sponsor">
+    <div class="content">
+      <h3 data-i18n="become-sponsor">Go sponsor signal!</h3>
+      <p>This website is a fork of <a href="https://github.com/ryohey/signal">signal</a>:</p>
+      <p class="sponsor-intro" data-i18n="sponsor-intro">
+        "signal is an application that I am personally building on weekends. If
+        you like the concept of a lightweight composition software that runs
+        in your browser, please support me."
+      </p>
 
-        <a class="sponsor-button" href="https://github.com/sponsors/ryohey"
-          ><img src="/iconmonstr-favorite-4.svg" /><span
-            data-i18n="open-github-sponsors"
-            >Open Github Sponsors</span
-          ></a
-        >
+      <a class="sponsor-button" href="https://github.com/sponsors/ryohey"><img src="/iconmonstr-favorite-4.svg" /><span
+          data-i18n="open-github-sponsors">Open Github Sponsors</span></a>
+    </div>
+  </section>
+
+  <!-- <section id="support">
+    <div class="content">
+      <h3 data-i18n="support">Support</h3>
+
+      <div class="support-row">
+        <a class="external-link" href="https://twitter.com/signalmidi">
+          <img src="/iconmonstr-twitter-1.svg" />
+          @signalmidi
+        </a>
+        <span data-i18n="follow-twitter">Check for updates on Twitter</span>
       </div>
-    </section>
 
-    <section id="support">
-      <div class="content">
-        <h3 data-i18n="support">Support</h3>
-
-        <div class="support-row">
-          <a class="external-link" href="https://twitter.com/signalmidi">
-            <img src="/iconmonstr-twitter-1.svg" />
-            @signalmidi
-          </a>
-          <span data-i18n="follow-twitter">Check for updates on Twitter</span>
-        </div>
-
-        <div class="support-row">
-          <a class="external-link" href="https://github.com/ryohey/signal">
-            <img src="/github-icon.svg" />
-            ryohey/signal
-          </a>
-          <span data-i18n="support-github-desctiption"
-            >Report bugs or Request features on GitHub</span
-          >
-        </div>
+      <div class="support-row">
+        <a class="external-link" href="https://github.com/ryohey/signal">
+          <img src="/github-icon.svg" />
+          ryohey/signal
+        </a>
+        <span data-i18n="support-github-desctiption">Report bugs or Request features on GitHub</span>
       </div>
-    </section>
-  </body>
+    </div>
+  </section> -->
+</body>
+
 </html>

@@ -6,7 +6,7 @@ import React, { ChangeEvent, FC, useCallback, useRef, VFC } from "react"
 import { localized } from "../../../common/localize/localizedString"
 import { downloadSelectedTrackXML } from "../../../ml-analyzer/common/xml/midi2xml"
 import { createSong, openSong, saveSong } from "../../actions"
-import { hasFSAccess, openFile, saveFile, saveFileAs } from "../../actions/file"
+import { openFile, saveFile, saveFileAs } from "../../actions/file"
 import { useStores } from "../../hooks/useStores"
 import { useTheme } from "../../hooks/useTheme"
 import { Tab } from "./Navigation"
@@ -155,20 +155,20 @@ export const FileMenuButton: FC = observer(() => {
       >
         <MenuItem onClick={onClickNew}>{localized("new-song", "New")}</MenuItem>
 
-        <Divider />
+        {/* <Divider />
 
         {hasFSAccess && <FileMenu close={handleClose} />}
 
-        {!hasFSAccess && <LegacyFileMenu close={handleClose} />}
+        {!hasFSAccess && <LegacyFileMenu close={handleClose} />} */}
 
         <Divider />
 
-        <MenuItem onClick={onClickExport}>
+        <MenuItem onClick={onClickExport} disabled>
           {localized("export-audio", "Export Audio")}
         </MenuItem>
 
         {/* @signal-ml */}
-        <MenuItem onClick={onClickExportXML}>
+        <MenuItem onClick={onClickExportXML} disabled>
           {localized("export-xml", "Export Track as XML")}
         </MenuItem>
       </StyledMenu>
