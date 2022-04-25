@@ -12,7 +12,7 @@ In essence, the backend is doing nothing more than running script on a midi file
 
  - For users, this process is made an seemless as possible by not blocking workflow and allowing sections of the song to be converted at its own pace.
 
- - For researchers, a modular backend means that all that is needed to set up a server is to host the ![backend server](https://github.com/poohcom1/signal-ml-backend) and a create a "manifest file" for each model, which is a mix of shell script and a config file that tells the backend how to convert a midi file and what kind of parameters the user can control. This frontend could then be hosted statically on services such as Vercel or Heroku. 
+ - For researchers, a modular backend means that all that is needed to set up a server is to host the ![backend server](https://github.com/poohcom1/signal-ml-backend) and a create a "manifest file" for each model, which is a mix of shell script and a config file that tells the backend how to convert a midi file and what kind of parameters the user can control. The configs specified in the file would be intelligently displayed to the user as formatted options.
  - See https://github.com/poohcom1/signal-ml-backend for more information on the backend.
 
 This is a WIP, so there are still many features and bugs to be resolved.
