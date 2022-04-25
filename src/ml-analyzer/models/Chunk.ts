@@ -199,18 +199,7 @@ export default class Chunk {
     }
   }
 
-  public playFromStart(delaySeconds = 0) {
-    if (this.audioSrc) {
-      this._audio.src = this.audioSrc
-
-      this._audio.play().then().catch(console.log)
-    }
-  }
-
-  public bpm = 0
-
-  public play(position: number, bpm: number, tickToMillisec: CallableFunction) {
-    this.bpm = bpm
+  public play(position: number, bpm: number, tickToMillisec: CallableFunction): NoteEvent[] {
     if (this.audioSrc) {
       if (this._playTimeout) clearTimeout(this._playTimeout)
       if (
@@ -223,20 +212,24 @@ export default class Chunk {
           tickToMillisec(position) / 1000 -
           tickToMillisec(this.startTick) / 1000
 
-        this._playAudio(seconds)
+        this._playAudio(bpm, seconds)
       } else if (position < this.startTick) {
         const delayMs = tickToMillisec(this.startTick - position)
 
-        this._playTimeout = setTimeout(() => this._playAudio(), delayMs)
+        this._playTimeout = setTimeout(() => this._playAudio(bpm), delayMs)
       }
+
+      return this.notes
     }
+
+    return []
   }
 
-  private _playAudio(time: number = 0) {
+  private _playAudio(bpm: number, time: number = 0) {
     let offset = 0
 
     if ("trimStart" in this._mlTrack.modelManifest) {
-      offset = (60 / this.bpm) * this._mlTrack.modelManifest.trimStart
+      offset = (60 / bpm) * this._mlTrack.modelManifest.trimStart
     }
 
     this._audio.src = this.audioSrc
@@ -284,6 +277,7 @@ export default class Chunk {
    * Aborts pending fetch and free whatever is required
    */
   public destroy() {
+    this.reapplyVelocity()
     if (this.audioSrc !== "") URL.revokeObjectURL(this.audioSrc)
 
     this._fetchController.abort()

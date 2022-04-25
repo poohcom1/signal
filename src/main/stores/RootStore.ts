@@ -58,7 +58,7 @@ export default class RootStore {
     synthGroup.outputs.push({ synth, isEnabled: true })
 
     // @signal-ml
-    const player = new MLPlayer(synthGroup, metronomeSynth, this.trackMute, this)
+    const player = new MLPlayer(synthGroup, metronomeSynth, this.trackMute, this as RootStore)
     const midiInput = new MIDIInput()
     const midiRecorder = new MIDIRecorder(player, this)
     this.services = {
