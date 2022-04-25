@@ -1,3 +1,4 @@
+import { reaction } from "mobx"
 import Player from "../../common/player/Player"
 import TrackMute from "../../common/trackMute"
 import { SynthOutput } from "../../main/services/SynthOutput"
@@ -8,6 +9,7 @@ import MLTracksStore from "../stores/MLTracksStore"
 
 export default class MLPlayer extends Player {
   public mlTrackStore: MLTracksStore | null = null
+
   private songStore
 
   constructor(
@@ -19,22 +21,33 @@ export default class MLPlayer extends Player {
     super(output, metronomeOutput, trackMute, songStore)
 
     this.songStore = songStore
+    this._play.bind(this)
+  }
+
+  private _play(position: number) {
+    if (!this.isPlaying || !this.mlTrackStore) return
+
+    let allChunks = this.mlTrackStore.getChunks()
+
+    for (const chunk of allChunks) {
+      chunk.stop()
+
+      chunk.play(
+        position,
+        (this.songStore as RootStore).pianoRollStore.currentTempo ?? 120,
+        this.tickToMillisec.bind(this)
+      )
+    }
+  }
+
+  public onSetPosition() {
+    this._play(this.position)
   }
 
   public play(): void {
     super.play()
 
-    if (!this.mlTrackStore) return
-
-    let allChunks = this.mlTrackStore.getChunks()
-
-    for (const chunk of allChunks) {
-      chunk.play(
-        this.position,
-        (this.songStore as RootStore).pianoRollStore.currentTempo ?? 120,
-        this.tickToMillisec.bind(this)
-      )
-    }
+    this._play(this.position)
   }
 
   public stop(): void {
@@ -53,7 +66,7 @@ export default class MLPlayer extends Player {
     this.mlTrackStore?.mlTracks.forEach((t) =>
       t?.reset(this.songStore as MLRootStore)
     )
-    
+
     super.currentTempo = newTempo
   }
 }

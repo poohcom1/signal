@@ -5,6 +5,7 @@ import { BeatWithX } from "../../../common/helpers/mapBeats"
 import { LoopSetting } from "../../../common/player"
 import { Theme } from "../../../common/theme/Theme"
 import Chunk, { FetchState } from "../../../ml-analyzer/models/Chunk"
+import MLPlayer from "../../../ml-analyzer/models/MLPlayer"
 import MLRootStore from "../../../ml-analyzer/stores/MLRootStore"
 import { setLoopBegin, setLoopEnd, updateTimeSignature } from "../../actions"
 import { Layout } from "../../Constants"
@@ -253,7 +254,9 @@ const PianoRuler: FC<PianoRulerProps> = observer(({ rulerStore, style }) => {
           }
         } else {
           rulerStore.selectedTimeSignatureEventIds = []
-          player.position = quantizedTick
+          player.position = quantizedTick;
+          // @signal-ml
+          (player as MLPlayer).onSetPosition()
         }
       }
     },

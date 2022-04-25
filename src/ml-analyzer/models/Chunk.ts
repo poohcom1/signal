@@ -1,5 +1,4 @@
 import { clone } from "lodash"
-import { AnyEvent, LyricsEvent, MetaEvent } from "midifile-ts"
 import { makeObservable, observable } from "mobx"
 import { NoteEvent, TrackEvent } from "../../../src/common/track"
 import { isNoteEvent } from "../../common/track/identify"
@@ -213,6 +212,7 @@ export default class Chunk {
   public play(position: number, bpm: number, tickToMillisec: CallableFunction) {
     this.bpm = bpm
     if (this.audioSrc) {
+      if (this._playTimeout) clearTimeout(this._playTimeout)
       if (
         position >= this.startTick &&
         position <= this.startTick + this.duration
@@ -223,16 +223,16 @@ export default class Chunk {
           tickToMillisec(position) / 1000 -
           tickToMillisec(this.startTick) / 1000
 
-        this.playAudio(seconds)
+        this._playAudio(seconds)
       } else if (position < this.startTick) {
         const delayMs = tickToMillisec(this.startTick - position)
 
-        this._playTimeout = setTimeout(() => this.playAudio(), delayMs)
+        this._playTimeout = setTimeout(() => this._playAudio(), delayMs)
       }
     }
   }
 
-  private playAudio(time: number = 0) {
+  private _playAudio(time: number = 0) {
     let offset = 0
 
     if ("trimStart" in this._mlTrack.modelManifest) {

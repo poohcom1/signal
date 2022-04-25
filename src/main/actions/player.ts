@@ -1,4 +1,5 @@
 import { isNoteEvent } from "../../common/track/identify"
+import MLPlayer from "../../ml-analyzer/models/MLPlayer"
 import RootStore from "../stores/RootStore"
 
 export const playOrPause = (rootStore: RootStore) => () => {
@@ -59,6 +60,9 @@ export const rewindOneBar = (rootStore: RootStore) => () => {
     }
   }
 
+  // @signal-ml
+  ;(player as MLPlayer).onSetPosition()
+
   // make sure player doesn't move out of sight to the left
   if (player.position < pianoRollStore.scrollLeftTicks) {
     pianoRollStore.setScrollLeftInTicks(player.position)
@@ -79,6 +83,9 @@ export const fastForwardOneBar = (rootStore: RootStore) => () => {
   const ticksPerBeat = (song.timebase * 4) / e.denominator
   const ticksPerMeasure = ticksPerBeat * e.numerator
   player.position = quantizer.round(player.position + ticksPerMeasure)
+
+  // @signal-ml
+  ;(player as MLPlayer).onSetPosition()
 
   // make sure player doesn't move out of sight to the right
   const { transform, scrollLeft } = pianoRollStore
