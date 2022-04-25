@@ -60,6 +60,8 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(() => {
 
   const close = () => (mlRootViewStore.trackSettingsOpened = false)
 
+  const [loading, setLoading] = useState(true)
+
   const [models, setModels] = useState<string[]>([])
   const [modelData, setModelData] = useState<ModelsData>({})
   const [modelConfigs, setModelConfigs] = useState<Record<string, Config>>({})
@@ -75,8 +77,13 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(() => {
 
           setModelConfigs(defaultConfigs(results.data, models))
           setModelData(results.data)
+
+          setLoading(false)
         } else {
           alert(results.error)
+
+          setIsRegularTrack(true)
+          setLoading(false)
         }
       })
     } else {
@@ -276,66 +283,80 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(() => {
               <Switch
                 defaultChecked
                 onChange={(e) => {
-                  setIsRegularTrack(!e.target.checked)
+                  setIsRegularTrack(!isRegularTrack)
                 }}
+                disabled={models.length === 0 && !loading}
+                checked={!isRegularTrack}
               />
             }
             label="Machine Learning Instrument"
           />
         </FormGroup>
 
-        <div style={{ display: isRegularTrack ? "none" : "block" }}>
-          <h3>Choose a model:</h3>
-          <FormControl variant="outlined" fullWidth>
-            <InputLabel id="model-select">Model</InputLabel>
-            <Select
-              label="Model"
-              labelId="model-select"
-              value={model}
-              onChange={(e) => {
-                setModel(e.target.value as string)
-              }}
-            >
-              {models ? (
-                models.map((model) => (
-                  <MenuItem value={model}>{model}</MenuItem>
-                ))
-              ) : (
-                <MenuItem value={""}>Loading models...</MenuItem>
-              )}
-            </Select>
-          </FormControl>
-          {modelData[model] ? (
-            <>
-              <DialogContentText>
-                {modelData[model].description ?? ""}
-              </DialogContentText>
-              {modelData[model].link ? (
-                <Link href={modelData[model].link} target="_blank">
-                  {modelData[model].link ?? ""}
-                </Link>
-              ) : (
-                <></>
-              )}
-            </>
-          ) : (
-            <></>
-          )}
-          <div>
-            <Divider style={{ marginTop: "16px" }}>{model} Configs</Divider>
-            {/* Individual configs */}
-            <Box
-              component="form"
-              sx={{
-                "& .MuiTextField-root": { m: 1, width: "25ch" },
-              }}
-              noValidate
-              autoComplete="off"
-            >
-              {drawConfig}
-            </Box>
-          </div>
-        </div>
+        {loading ? (
+          <p>Loading the models...</p>
+        ) : (
+          <>
+            {model.length > 0 ? (
+              <div style={{ display: isRegularTrack ? "none" : "block" }}>
+                <h3>Choose a model:</h3>
+                <FormControl variant="outlined" fullWidth>
+                  <InputLabel id="model-select">Model</InputLabel>
+                  <Select
+                    label="Model"
+                    labelId="model-select"
+                    value={model}
+                    onChange={(e) => {
+                      setModel(e.target.value as string)
+                    }}
+                  >
+                    {models ? (
+                      models.map((model) => (
+                        <MenuItem value={model}>{model}</MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem value={""}>Loading models...</MenuItem>
+                    )}
+                  </Select>
+                </FormControl>
+                {modelData[model] ? (
+                  <>
+                    <DialogContentText>
+                      {modelData[model].description ?? ""}
+                    </DialogContentText>
+                    {modelData[model].link ? (
+                      <Link href={modelData[model].link} target="_blank">
+                        {modelData[model].link ?? ""}
+                      </Link>
+                    ) : (
+                      <></>
+                    )}
+                  </>
+                ) : (
+                  <></>
+                )}
+                <div>
+                  <Divider style={{ marginTop: "16px" }}>
+                    {model} Configs
+                  </Divider>
+                  {/* Individual configs */}
+                  <Box
+                    component="form"
+                    sx={{
+                      "& .MuiTextField-root": { m: 1, width: "25ch" },
+                    }}
+                    noValidate
+                    autoComplete="off"
+                  >
+                    {drawConfig}
+                  </Box>
+                </div>
+              </div>
+            ) : (
+              <>Models not available!</>
+            )}
+          </>
+        )}
       </DialogContent>
 
       <DialogActions>
