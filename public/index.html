@@ -45,7 +45,7 @@
     <header>
       <div class="content">
         <a href="/" id="title"><img src="logo-white.svg" /></a>
-        <a href="https://github.com/ryohey/signal/" id="github-link">
+        <a href="https://github.com/poohcom1/signal-ml/" id="github-link">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -81,37 +81,38 @@
     <section id="features">
       <div class="content">
         <div class="left">
-          <h3 data-i18n="features">Features</h3>
 
-          <div class="feature" style="background: #3c2fd740">
-            <div class="icon" style="background: #3c2fd7">
-              <img src="/midi-logo.svg" style="width: 3rem" />
-            </div>
-            <div class="title" data-i18n="feature-midi-file">
-              Fully equipped MIDI editor
-            </div>
-            <div class="description" data-i18n="feature-midi-file-description">
-              Orchestrate freely with the multi-track piano roll editor. Of
-              course, you can use velocity, pitch bend, expression, and
-              modulation to create expressive sound.
-            </div>
-          </div>
+          <h3 data-i18n="features">Featured models:</h3>
 
           <div class="feature" style="background: #91322c73">
             <div class="icon" style="background: #e7372c">
               <img src="/general-midi-logo.svg" />
             </div>
-            <div class="title" data-i18n="feature-gm-module">
-              GM compatible sound module
-            </div>
+            <a href="https://github.com/rodrigo-castellon/midi2params" style="text-decoration: none; color: white">
+              <div class="title" data-i18n="feature-gm-module">
+                MIDI2PARAMS
+              </div>
+            </a>
             <div class="description" data-i18n="feature-gm-module-description">
-              128 virtual instruments loaded at very high speed. A dedicated
-              sound module built with the WebAudio API and AudioWorklet allows
-              you to play countless notes in your browser.
+              A violin model trained from only a few amateur violin recordings, synthesized with DDSP.
             </div>
           </div>
 
-          <div class="feature" style="background: #ff99002f">
+          <div class="feature" style="background: #3c2fd740">
+            <div class="icon" style="background: #3c2fd7">
+              <img src="https://n3utrino.work/wp-content/uploads/2021/02/logo_light-1920x480.png" style="width: 3rem" />
+            </div>
+            <a href="https://n3utrino.work/" style="text-decoration: none; color: white">
+              <div class="title" data-i18n="feature-midi-file">
+                N3UTRINO
+              </div>
+            </a>
+            <div class="description" data-i18n="feature-midi-file-description">
+              A neural network singing synthesizer. 
+            </div>
+          </div>
+
+          <!-- <div class="feature" style="background: #ff99002f">
             <div class="icon" style="background: #ff9900">
               <img src="/wav-file.svg" />
             </div>
@@ -168,26 +169,21 @@
               your desktop and use it as an application.
             </div>
           </div>
-        </div>
+        </div> -->
 
         <div class="right">
-          <script
-            async
-            type="text/javascript"
-            src="//cdn.carbonads.com/carbon.js?serve=CESI52QY&placement=signalvercelapp"
-            id="_carbonads_js"
-          ></script>
         </div>
       </div>
     </section>
 
     <section id="sponsor">
       <div class="content">
-        <h3 data-i18n="become-sponsor">Become a sponsor!</h3>
+        <h3 data-i18n="become-sponsor">Go sponsor signal!</h3>
+        <p>This website is a fork of signal:</p>
         <p class="sponsor-intro" data-i18n="sponsor-intro">
-          signal is an application that I am personally building on weekends. If
+          "signal is an application that I am personally building on weekends. If
           you like the concept of a lightweight composition software that runs
-          in your browser, please support me.
+          in your browser, please support me."
         </p>
 
         <a class="sponsor-button" href="https://github.com/sponsors/ryohey"
