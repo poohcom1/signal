@@ -56,6 +56,7 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
         ? this.props.lyric !== "" &&
           Object.values(this.props.lyricsMap)
             .reduce((pre, cur) => pre.concat(cur), [])
+            .concat(Object.keys(this.props.lyricsMap))
             .includes(this.props.lyric)
         : true
 
