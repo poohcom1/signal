@@ -1,5 +1,5 @@
 import styled from "@emotion/styled"
-import { Autocomplete, TextField } from "@mui/material"
+import { Autocomplete, Popper, TextField } from "@mui/material"
 import React from "react"
 
 interface IProps {
@@ -15,7 +15,8 @@ interface IProps {
 
 interface IState {
   editing: boolean
-  text: string
+  lyric: string
+  validLyric: boolean
 }
 
 const SyllableEdit = styled(TextField)<Partial<IProps>>`
@@ -27,6 +28,10 @@ const SyllableEdit = styled(TextField)<Partial<IProps>>`
   font-size: 20px;
 `
 
+const StyledPopper = styled(Popper)`
+  min-width: fit-content;
+`
+
 export default class LyricSyllable extends React.Component<IProps, IState> {
   private _inputRef: React.RefObject<HTMLInputElement>
 
@@ -35,7 +40,8 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
 
     this.state = {
       editing: false,
-      text: props.lyric ?? "",
+      lyric: props.lyric ?? "",
+      validLyric: true,
     }
 
     this._inputRef = React.createRef()
@@ -46,7 +52,14 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
 
   componentDidUpdate(prevProps: IProps) {
     if (this.props.lyric !== prevProps.lyric) {
-      this.setState({ text: this.props.lyric })
+      const valid = this.props.lyricsMap
+        ? this.props.lyric !== "" &&
+          Object.values(this.props.lyricsMap)
+            .reduce((pre, cur) => pre.concat(cur), [])
+            .includes(this.props.lyric)
+        : true
+
+      this.setState({ lyric: this.props.lyric, validLyric: valid })
     }
   }
 
@@ -57,15 +70,15 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
   }
 
   handleChange(text: string) {
-    this.setState({ text })
+    this.setState({ lyric: text })
     setTimeout(
-      () => this.props.setLyric(this.props.noteId, this.state.text),
+      () => this.props.setLyric(this.props.noteId, this.state.lyric),
       100
     )
   }
 
   handleSubmit() {
-    this.props.setLyric(this.props.noteId, this.state.text)
+    this.props.setLyric(this.props.noteId, this.state.lyric)
     this.setState({ editing: false })
   }
 
@@ -73,6 +86,7 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
     return (
       <>
         <Autocomplete
+          PopperComponent={StyledPopper}
           freeSolo
           blurOnSelect
           options={
@@ -85,18 +99,22 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
           }
           onChange={(e, value, reason) => {
             if (reason === "clear") {
-              this.setState({ text: "" })
+              this.setState({ lyric: "" })
             }
-            this.handleChange(value ?? "")
+            this.handleChange((value as string) ?? "")
           }}
           onInputChange={(e, value) => this.handleChange(value)}
-          inputValue={this.state.text}
+          inputValue={this.state.lyric}
           renderInput={(params) => (
             <SyllableEdit
               {...params}
               style={{
                 width: this.props.width,
+                backgroundColor: this.state.validLyric
+                  ? "transparent"
+                  : "rgba(255, 174, 0, 0.44)",
               }}
+              title={this.state.validLyric ? "" : "This is an invalid lyric"}
               variant="standard"
               ref={this._inputRef}
               x={this.props.x}
