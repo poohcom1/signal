@@ -372,7 +372,10 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(() => {
       <DialogActions>
         <Button
           onClick={handleCancel}
-          disabled={rootStore.song.tracks.length <= 2}
+          disabled={
+            mlRootViewStore.trackSettingMode === "create" &&
+            rootStore.song.tracks.length <= 2
+          }
         >
           Cancel
         </Button>

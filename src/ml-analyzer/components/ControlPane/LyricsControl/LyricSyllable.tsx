@@ -78,7 +78,9 @@ export default class LyricSyllable extends React.Component<IProps, IState> {
   }
 
   handleSubmit() {
-    this.props.setLyric(this.props.noteId, this.state.lyric)
+    if (this.state.lyric !== this.props.lyric) {
+      this.props.setLyric(this.props.noteId, this.state.lyric)
+    }
     this.setState({ editing: false })
   }
 
