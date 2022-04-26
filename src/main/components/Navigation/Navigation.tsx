@@ -1,5 +1,5 @@
 import styled from "@emotion/styled"
-import { Forum, Help, List, Schedule, Settings } from "@mui/icons-material"
+import { Help, List, Schedule, Settings } from "@mui/icons-material"
 import Color from "color"
 import { observer } from "mobx-react-lite"
 import React, { FC, useCallback } from "react"
@@ -117,10 +117,10 @@ export const Navigation: FC = observer(() => {
         <Help />
         <span>{localized("help", "Help")} </span>
       </Tab>
-      <Tab id="open-gitter-button">
+      {/* <Tab id="open-gitter-button">
         <Forum />
         <span>{localized("open-chat", "Open Chat")} </span>
-      </Tab>
+      </Tab> */}
     </Container>
   )
 })
