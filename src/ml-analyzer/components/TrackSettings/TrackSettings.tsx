@@ -121,13 +121,20 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(() => {
         )
         track.setModel(model, modelData[model], modelConfigs[model])
 
+        // Select track
         rootStore.song.selectTrack(track.trackId)
 
+        // Select control mode
         if (track.hasMidiParam("lyrics")) {
           rootStore.pianoRollStore.controlMode = "lyrics"
+        } else {
+          rootStore.pianoRollStore.controlMode = "velocity"
         }
       } else {
+        // Select track
+
         mlTrackStore.addRegularTrack(rootStore, mlRootViewStore.trackSettingsId)
+        rootStore.song.selectTrack(mlRootViewStore.trackSettingsId)
       }
     } else {
       const track = mlTrackStore.get(mlRootViewStore.trackSettingsId)
@@ -136,8 +143,11 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(() => {
         track.setModel(model, modelData[model], modelConfigs[model])
         track.reset(rootStore)
 
+        // Select control mode
         if (track.hasMidiParam("lyrics")) {
           rootStore.pianoRollStore.controlMode = "lyrics"
+        } else {
+          rootStore.pianoRollStore.controlMode = "velocity"
         }
       }
     }
@@ -287,21 +297,25 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(() => {
       <DialogTitle>{`Track #${mlRootViewStore.trackSettingsId} Settings`}</DialogTitle>
 
       <DialogContent>
-        <FormGroup>
-          <FormControlLabel
-            control={
-              <Switch
-                defaultChecked
-                onChange={(e) => {
-                  setIsRegularTrack(!isRegularTrack)
-                }}
-                disabled={models.length === 0 && !loading}
-                checked={!isRegularTrack}
-              />
-            }
-            label="Machine Learning Instrument"
-          />
-        </FormGroup>
+        {mlRootViewStore.trackSettingMode === "create" ? (
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  defaultChecked
+                  onChange={(e) => {
+                    setIsRegularTrack(!isRegularTrack)
+                  }}
+                  disabled={models.length === 0 && !loading}
+                  checked={!isRegularTrack}
+                />
+              }
+              label="Machine Learning Instrument"
+            />
+          </FormGroup>
+        ) : (
+          <></>
+        )}
 
         {loading ? (
           <p>Loading the instruments...</p>
