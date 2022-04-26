@@ -58,7 +58,9 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(() => {
   const rootStore = useStores() as MLRootStore
   const { mlRootViewStore, mlTrackStore } = rootStore
 
-  const close = () => (mlRootViewStore.trackSettingsOpened = false)
+  const close = () => {
+    mlRootViewStore.trackSettingsOpened = false
+  }
 
   const [loading, setLoading] = useState(true)
 
@@ -270,7 +272,15 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(() => {
   return (
     <Dialog
       open={mlRootViewStore.trackSettingsOpened}
-      onClose={close}
+      onClose={(_e, reason) => {
+        if (
+          (reason && reason === "backdropClick") ||
+          reason === "escapeKeyDown"
+        ) {
+          return
+        }
+        close()
+      }}
       fullWidth={true}
       maxWidth={"md"}
     >
@@ -360,7 +370,12 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(() => {
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={handleCancel}>Cancel</Button>
+        <Button
+          onClick={handleCancel}
+          disabled={rootStore.song.tracks.length <= 2}
+        >
+          Cancel
+        </Button>
         <Button
           onClick={handleApply}
           disabled={model === "" && !isRegularTrack}

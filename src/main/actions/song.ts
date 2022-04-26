@@ -103,11 +103,12 @@ export const selectTrack = (rootStore: RootStore) => (trackId: number) => {
 
   // @signal-ml
   if (
-    (rootStore as MLRootStore).mlTrackStore
-      .get(trackId)
-      ?.hasMidiParam("lyrics")
-  )
+    (rootStore as MLRootStore).mlTrackStore.get(trackId)?.hasMidiParam("lyrics")
+  ) {
     rootStore.pianoRollStore.controlMode = "lyrics"
+  } else {
+    rootStore.pianoRollStore.controlMode = "velocity"
+  }
 }
 
 export const insertTrack = (rootStore: RootStore) => (trackId: number) => {

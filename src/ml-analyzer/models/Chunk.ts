@@ -89,7 +89,7 @@ export default class Chunk {
   }
 
   private convertPrecheck(rootStore: RootStore) {
-    const track = rootStore.song.selectedTrack
+    const track = rootStore.song.getTrack(this._mlTrack.trackId)
 
     if (track && this._mlTrack.hasMidiParam("lyrics")) {
       const lyrics = track.events
@@ -199,7 +199,11 @@ export default class Chunk {
     }
   }
 
-  public play(position: number, bpm: number, tickToMillisec: CallableFunction): NoteEvent[] {
+  public play(
+    position: number,
+    bpm: number,
+    tickToMillisec: CallableFunction
+  ): NoteEvent[] {
     if (this.audioSrc) {
       if (this._playTimeout) clearTimeout(this._playTimeout)
       if (
