@@ -80,18 +80,35 @@
         <p class="platform" data-i18n="platform">
           Supported desktop browsers: Google Chrome / Firefox / Safari
           <br>
-          *Currently, saving and loading audio is not supported.
+          *At the moment, saving and loading audio has not been implemented yet.
         </p>
       </div>
       <div class="image">
         <img src="screenshot.png" alt="" />
       </div>
+
+
     </div>
   </section>
 
   <section id="features">
     <div class="content">
       <div class="left">
+
+        <h3 data-i18n="features">How it works:</h3>
+        <div class="text">
+          <div class="description">
+            While you edit the track, the playback will be regular midi sounds. These sounds are just placeholders.
+            After a few seconds of idling, the conversion process will begin. The progression of this conversion can be
+            seen on the colored bar above each note group. If the notes are
+            still being actively edited, the bar is grey. After a few seconds, the bar will turn yellow,
+            indicating that the server has started converted the notes. Once the bar turns green, the conversion is
+            complete, and the converted audio now replaces the midi placeholder sounds in the playback.
+
+            If the bar turns red, an error might have occured. In this case, moving around the notes to re-trigger the
+            conversion should help.
+          </div>
+        </div>
 
         <h3 data-i18n="features">Featured models:</h3>
 
@@ -104,7 +121,7 @@
               MIDI2PARAMS
             </div>
           </a>
-          <div class="description" data-i18n="feature-gm-module-description">
+          <div class="description">
             A violin model trained from only a few amateur violin recordings, synthesized with DDSP.
           </div>
         </div>
@@ -118,7 +135,7 @@
               N3UTRINO
             </div>
           </a>
-          <div class="description" data-i18n="feature-midi-file-description">
+          <div class="description">
             A neural network singing synthesizer. Up to 10 different voices available.
           </div>
         </div>
