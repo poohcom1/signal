@@ -14,7 +14,7 @@ import MLRootStore from "./MLRootStore"
 function createTrackAnalyzer(
   rootStore: MLRootStore,
   id: number,
-  delayMS = 3000
+  delayMS = 2000
 ): MLTrack {
   const disposer = reaction(
     // Track events
