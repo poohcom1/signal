@@ -14,8 +14,7 @@ export function convertMidi(
   formData.append("options", JSON.stringify(options))
   formData.append("bpm", `${bpm}`)
 
-  return fetch(`${BACKEND_URL}/convert/${model
-    }`, {
+  return fetch(`${BACKEND_URL}/convert/${model}`, {
     method: "POST",
     body: formData,
     signal,
@@ -23,19 +22,21 @@ export function convertMidi(
   })
 }
 
-
 export async function getModels(): Promise<Result<ModelsData>> {
   console.log(BACKEND_URL)
 
   try {
     const res = await fetch(`${BACKEND_URL}/models`, { method: "GET" })
 
-    const list = await res.json() as ModelsData
+    const list = (await res.json()) as ModelsData
 
     return { data: list, error: null }
   } catch (error) {
     console.log(error)
 
-    return { data: {}, error: "Server error! Please try again later" }
+    return {
+      data: {},
+      error: "Server error. Please refresh or try again later",
+    }
   }
 }
