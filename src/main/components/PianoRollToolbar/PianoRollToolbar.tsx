@@ -9,6 +9,7 @@ import InstrumentBrowser from "../InstrumentBrowser/InstrumentBrowser"
 import { AutoScrollButton } from "../Toolbar/AutoScrollButton"
 import QuantizeSelector from "../Toolbar/QuantizeSelector/QuantizeSelector"
 import { Toolbar } from "../Toolbar/Toolbar"
+import { ToolbarButton } from "../Toolbar/ToolbarButton"
 import { TrackListMenuButton } from "../TrackList/TrackListMenuButton"
 import { EventListButton } from "./EventListButton"
 import { InstrumentButton } from "./InstrumentButton"
@@ -23,6 +24,13 @@ const Spacer = styled.div`
 
 const FlexibleSpacer = styled.div`
   flex-grow: 1;
+`
+// @signal-ml
+const Label = styled.div`
+  display: flex;
+  align-items: center;
+  margin-right: 1rem;
+  color: ${({ theme }) => theme.secondaryTextColor};
 `
 
 export const PianoRollToolbar: FC = observer(() => {
@@ -62,6 +70,18 @@ export const PianoRollToolbar: FC = observer(() => {
       <EventListButton />
 
       <Spacer />
+      {mlTrackStore.has(selectedTrackId) ? (
+        <>
+          <ToolbarButton>
+            {mlTrackStore.get(selectedTrackId)!.model}
+          </ToolbarButton>
+          <Spacer />
+
+          <Label>Placeholder:</Label>
+        </>
+      ) : (
+        <></>
+      )}
 
       <InstrumentButton />
       <InstrumentBrowser />

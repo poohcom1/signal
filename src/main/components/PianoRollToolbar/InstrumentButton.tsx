@@ -7,7 +7,8 @@ import PianoIcon from "../../images/piano.svg"
 import { ToolbarButton } from "../Toolbar/ToolbarButton"
 
 const InstrumentIcon = styled(PianoIcon)`
-  margin-right: 0.5rem;
+  /* @signal-ml */
+  /* margin-right: 0.5rem; */
 `
 
 export const InstrumentButton: FC = observer(() => {
@@ -32,7 +33,7 @@ export const InstrumentButton: FC = observer(() => {
   return (
     <ToolbarButton onClick={onClickInstrument}>
       <InstrumentIcon viewBox="0 0 24 24" />
-      {instrumentName}
+      {/* @signal-ml */}
     </ToolbarButton>
   )
 })
