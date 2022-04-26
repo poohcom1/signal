@@ -304,16 +304,16 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(() => {
         </FormGroup>
 
         {loading ? (
-          <p>Loading the models...</p>
+          <p>Loading the instruments...</p>
         ) : (
           <>
             {model.length > 0 ? (
               <div style={{ display: isRegularTrack ? "none" : "block" }}>
-                <h3>Choose a model:</h3>
+                <h3>Choose a virtual instrument:</h3>
                 <FormControl variant="outlined" fullWidth>
-                  <InputLabel id="model-select">Model</InputLabel>
+                  <InputLabel id="model-select">Instrument</InputLabel>
                   <Select
-                    label="Model"
+                    label="Instrument"
                     labelId="model-select"
                     value={model}
                     onChange={(e) => {
@@ -325,7 +325,7 @@ export const TrackSettings: FC<TrackSettingsProps> = observer(() => {
                         <MenuItem value={model}>{model}</MenuItem>
                       ))
                     ) : (
-                      <MenuItem value={""}>Loading models...</MenuItem>
+                      <MenuItem value={""}>Loading instruments...</MenuItem>
                     )}
                   </Select>
                 </FormControl>
