@@ -36,7 +36,7 @@ export default class Chunk {
   private _error: Error | null = null
 
   private _retries = 0
-  private readonly MAX_RETRIES = 5
+  private readonly MAX_RETRIES = 1
 
   get endTick(): number {
     return this.startTick + this.duration
@@ -194,7 +194,10 @@ export default class Chunk {
           console.error("Error ", this._error)
 
           if (this._retries++ < this.MAX_RETRIES)
-            this.delayedConvert(rootStore, onUpdate, 100)
+            setTimeout(
+              () => this.delayedConvert(rootStore, onUpdate, 100),
+              1000
+            )
         })
     }
   }
