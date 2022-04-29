@@ -38,7 +38,8 @@ function createTrackAnalyzer(
       const metaEvents = []
       const newChunks = []
 
-      metaEvents.push(...events.filter(isLyricsEvent))
+      if (mlTrack.hasMidiParam("lyrics"))
+        metaEvents.push(...events.filter(isLyricsEvent))
 
       for (const noteEvents of noteEventsList) {
         newChunks.push(new Chunk(noteEvents, metaEvents, mlTrack))
@@ -46,13 +47,13 @@ function createTrackAnalyzer(
 
       // Compare and replace old chunks
       if (mlTrack) {
-        mlTrack.chunks = Chunk.replaceChunks(
-          mlTrack.chunks,
-          newChunks
-        )
+        mlTrack.chunks = Chunk.replaceChunks(mlTrack.chunks, newChunks)
 
         for (const chunk of mlTrack.chunks) {
-          if (chunk.state == FetchState.UnFetched || chunk.state == FetchState.NeedData) {
+          if (
+            chunk.state == FetchState.UnFetched ||
+            chunk.state == FetchState.NeedData
+          ) {
             chunk.delayedConvert(
               rootStore,
               (_state: FetchState) => {
