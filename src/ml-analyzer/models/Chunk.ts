@@ -303,7 +303,7 @@ export default class Chunk {
     allEvents: TrackEvent[],
     minRest: number = 0,
     minNotes: number = 1,
-    maxNotes: number = 10
+    maxNotes: number = 6
   ): NoteEvent[][] {
     // Filter out non-note events
     const noteEvents: NoteEvent[] = allEvents.filter(isNoteEvent)

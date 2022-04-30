@@ -126,6 +126,15 @@ function drawChunk(
     [FetchState.NeedData]: "rgba(255, 145, 0, 0.5)",
   }[chunk.state]
 
+  const text = {
+    [FetchState.UnFetched]: "",
+    [FetchState.Prefetch]: "",
+    [FetchState.Fetching]: "Converting...",
+    [FetchState.Fetched]: "",
+    [FetchState.Error]: "Error",
+    [FetchState.NeedData]: "Incomplete input",
+  }[chunk.state]
+
   ctx.beginPath()
 
   const beginX = chunk.startTick * pixelsPerTick
@@ -135,6 +144,9 @@ function drawChunk(
     ctx.rect(beginX, 0, endX - beginX, height)
     //ctx.fillStyle = "rgba(0, 0, 0, 0.02)"
     ctx.fill()
+
+    ctx.strokeStyle = "white"
+    ctx.strokeText(text, beginX, height, endX - beginX)
   }
 }
 
