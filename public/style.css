@@ -75,7 +75,7 @@ section .content {
   color: var(--themeColor);
   font-weight: bold;
   display: inline-block;
-  margin: 2rem 0 0 0;
+  margin: 1rem 0 0 0;
   font-size: 1.2rem;
   border: 2px solid transparent;
   transition: 0.2s ease;
