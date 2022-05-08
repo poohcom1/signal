@@ -56,7 +56,7 @@ export default class MLTrack {
             const otherStart = other.tick
             const otherEnd = other.tick + other.duration
 
-            if (noteStart === otherStart && noteEnd === otherEnd) {
+            if (noteStart <= otherStart && noteEnd >= otherEnd) {
               eventsToDelete.push(other.id)
               continue
             }
